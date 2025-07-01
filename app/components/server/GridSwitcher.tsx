@@ -1,5 +1,5 @@
 import GridSwitcherClient from '../client/GridSwitcherClient';
-import GridContainer from './GridContainer';
+import GridShared from '../client/GridShared';
 import { getPlayerData } from '../../actions/playerActions';
 
 const tables = [
@@ -49,15 +49,7 @@ export default async function GridSwitcher() {
 	return (
 		<div>
 			<h1>NBA Guess Grids</h1>
-			<GridSwitcherClient tables={tables} playerData={allPlayerData}>
-				{tables.map((table, index) => (
-					<GridContainer
-						key={index}
-						csvData={allPlayerData[index].csvData}
-						difficulty={table.difficulty}
-					/>
-				))}
-			</GridSwitcherClient>
+			<GridShared tables={tables} allPlayerData={allPlayerData} />
 		</div>
 	);
 }

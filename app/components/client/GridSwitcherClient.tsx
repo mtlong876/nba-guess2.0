@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useRef } from 'react';
 import { checkPlayerGuess, getAllPlayerNames , checkDailyGuess} from '../../actions/playerActions';
+import GridDisplay from './GridDisplay';
+
 
 type GridSwitcherClientProps = {
   tables: {
@@ -14,9 +16,10 @@ type GridSwitcherClientProps = {
     playerFilename: string;
   }[];
   children: React.ReactNode[];
+  onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
 };
 
-export default function GridSwitcherClient({ tables, playerData, children }: GridSwitcherClientProps) {
+export default function GridSwitcherClient({ tables, playerData, children ,onStatusChange}: GridSwitcherClientProps) {
   const [selected, setSelected] = useState(0);
   const [guess, setGuess] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -24,7 +27,24 @@ export default function GridSwitcherClient({ tables, playerData, children }: Gri
   const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
   const [guessesRemaining, setGuessesRemaining] = useState<{ [key: number]: number }>({});
   const [correctGuesses, setCorrectGuesses] = useState<{ [key: number]: boolean }>({});
+  const difficulties: ("easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS")[] = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
+  const prevStatusRef = useRef<{ [key: number]: string }>({});
+  // useEffect(() => {
+  //   if (!onStatusChange) return;
 
+  //   const guessesLeft = guessesRemaining[selected] || 0;
+  //   const isSolved = correctGuesses[selected] || false;
+  //   let status: "incomplete" | "completed" | "failed" = "incomplete";
+  //   if (isSolved) status = "completed";
+  //   else if (guessesLeft <= 0) status = "failed";
+
+  //   // Only call if status actually changed for this difficulty
+  //   if (prevStatusRef.current[selected] !== status) {
+  //     console.log(`Status changed to: ${status} for difficulty: ${difficulties[selected]} switcher`);
+  //     onStatusChange(difficulties[selected], status);
+  //     prevStatusRef.current[selected] = status;
+  //   }
+  // }, [guessesRemaining, correctGuesses, selected, onStatusChange, tables]);
   // Initialize guesses remaining for each difficulty
   useEffect(() => {
     const initialGuesses: { [key: number]: number } = {};
@@ -75,6 +95,9 @@ export default function GridSwitcherClient({ tables, playerData, children }: Gri
           ...prev,
           [selected]: true
         }));
+        if (onStatusChange) {
+          onStatusChange(difficulties[selected], "completed");
+        }
       } else {
         // Decrease guesses remaining for this difficulty
         setGuessesRemaining(prev => ({

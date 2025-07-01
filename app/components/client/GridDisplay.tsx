@@ -1,21 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useRef} from 'react';
 
 type GridDisplayProps = {
   csvData: { [key: string]: string }[];
-  difficulty: string;
+  difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS";
+  onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
 };
 
-export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
+export default function GridDisplay({ csvData, difficulty , onStatusChange}: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
   const [points, setPoints] = useState(100); // Start with 100 points
-  const [status, setStatus] = useState<"incomplete" | "completed" | "failed">(() => {
-    // Load status from localStorage if available
-    return (localStorage.getItem(`status_${difficulty}`) as "completed" | "failed" | null) || "incomplete";
-  });
-
+  const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
+  const firstLoad = useRef(true);
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
+  useEffect(() => {
+    if (difficulty != changingDiffculty) {
+      return;
+    }
+      if (onStatusChange) {
+        onStatusChange(difficulty, status);
+      }
+    }, [status]);
 
   // Example: Each column costs 10 points to reveal
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
@@ -36,11 +42,12 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
   "3P%": 10,
   "FT%": 10
   };
-  let changingDiffculty = difficulty; 
+  let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty; 
   // Reset points and visible columns when difficulty changes
   useEffect(() => {
     changingDiffculty = difficulty;
-    
+    const savedStatus = localStorage.getItem(`status_${difficulty}`);
+    setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
     const savedPoints = localStorage.getItem(`points_${difficulty}`);
     const savedVisible = localStorage.getItem(`visibleColumns_${difficulty}`);
     if (savedVisible) {
@@ -62,7 +69,8 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
     } else {
       setPoints(100); // Reset to default if no saved points
     }
-    changingDiffculty = "false";
+    changingDiffculty = null;
+    firstLoad.current = true;
   }, [difficulty]);
 
   // Save to localStorage whenever state changes
@@ -76,20 +84,27 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
 
   // Reveal all columns and save status if completed or failed
   useEffect(() => {
+    if (difficulty != changingDiffculty) {
+      return;
+    }
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return; // Skip saving on first load
+    }
     if (status === "completed" || status === "failed") {
-      // Reveal all columns
       const allVisible: { [key: string]: boolean } = {};
       headers.forEach(header => {
         allVisible[header] = true;
       });
       setVisibleColumns(allVisible);
-      // Save status to localStorage
+      console.log(status);
       localStorage.setItem(`status_${difficulty}`, status);
-      // Optionally, save visible columns as well
       localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(allVisible));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, headers.join(','), difficulty]);
+    //console.log(`Status changed to: ${status}`);
+  }, [status, difficulty]);
+
+
 
   const toggleColumn = (column: string) => {
     console.log(`Toggling column: ${column}`);
