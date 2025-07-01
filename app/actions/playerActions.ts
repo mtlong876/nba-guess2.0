@@ -2,6 +2,8 @@
 
 import fs from 'fs';
 import path from 'path';
+import daily from '../difficulties/daily.json';
+const difficulties = Object.keys(daily);
 
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
@@ -141,6 +143,36 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
   }
 }
 
+export async function checkDailyGuess(guess: string, difficulty: number) {
+  try{
+      const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
+      const playerFilename = daily[difficultyFile]
+      const actualPlayerName = playerFilename
+        .replace('.csv', '')
+        .replace(/_\d+$/, '') // Remove ID at end
+        .replace(/_/g, ' '); // Replace underscores with spaces    
+      const normalizedGuess = guess.toLowerCase().trim();
+      const normalizedActual = actualPlayerName.toLowerCase().trim();
+      console.log(`Checking guess: ${normalizedGuess} against actual: ${normalizedActual}`);
+      if (normalizedGuess === normalizedActual) {
+        return {
+          correct: true,
+          message: `🎉 Correct! It was ${actualPlayerName}!`
+        };
+      } else {
+        return {
+          correct: false,
+          message: `❌ Incorrect. Try again!`
+        };
+      }
+    } catch (error) {
+      return {
+        correct: false,
+        message: 'Error checking guess. Please try again.'
+      };
+  }
+}
+
 export async function getPlayerData(difficulty: string, daily: boolean) {
   let player: string;
   
@@ -152,7 +184,7 @@ export async function getPlayerData(difficulty: string, daily: boolean) {
   }
 
   const csvData = loadCSVToObject(player);
-  
+  console.log(`Loaded data for player: ${player}`);
   // Return both the data and the player filename for guess checking
   return {
     csvData,

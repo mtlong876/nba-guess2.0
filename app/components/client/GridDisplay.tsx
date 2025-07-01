@@ -9,12 +9,39 @@ type GridDisplayProps = {
 
 export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
+  const [points, setPoints] = useState(100); // Start with 100 points
+  const [status, setStatus] = useState<"incomplete" | "completed" | "failed">(() => {
+    // Load status from localStorage if available
+    return (localStorage.getItem(`status_${difficulty}`) as "completed" | "failed" | null) || "incomplete";
+  });
 
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
-  let changingDiffculty = difficulty || 'easy';
-  // Load saved state from localStorage when component mounts
+
+  // Example: Each column costs 10 points to reveal
+  const getPointCost = (header: string) => headerPointCost[header] ?? 10;
+  const headerPointCost: { [key: string]: number } = {
+  "Season": 5,
+  "Team": 10,
+  "MIN": 10,
+  "GP": 10,
+  "GS": 10,
+  "PTS": 10,
+  "REB": 10,
+  "AST": 10,
+  "STL": 10,
+  "BLK": 10,
+  "TOV": 10,
+  "PF": 10,
+  "FG%": 10,
+  "3P%": 10,
+  "FT%": 10
+  };
+  let changingDiffculty = difficulty; 
+  // Reset points and visible columns when difficulty changes
   useEffect(() => {
-    changingDiffculty = difficulty
+    changingDiffculty = difficulty;
+    
+    const savedPoints = localStorage.getItem(`points_${difficulty}`);
     const savedVisible = localStorage.getItem(`visibleColumns_${difficulty}`);
     if (savedVisible) {
       try {
@@ -22,8 +49,20 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
       } catch (error) {
         console.error('Error parsing saved visible columns:', error);
       }
+    } else {
+      setVisibleColumns({});
     }
-    changingDiffculty = "false"
+    if (savedPoints) {
+      try {
+        setPoints(parseInt(savedPoints, 10));
+      } catch (error) {
+        console.error('Error parsing saved points:', error);
+        setPoints(100); // Reset to default if parsing fails
+      }
+    } else {
+      setPoints(100); // Reset to default if no saved points
+    }
+    changingDiffculty = "false";
   }, [difficulty]);
 
   // Save to localStorage whenever state changes
@@ -32,25 +71,67 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
       return;
     }
     localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(visibleColumns));
-  }, [visibleColumns]);
+    localStorage.setItem(`points_${difficulty}`, points.toString());
+  }, [visibleColumns, difficulty]);
+
+  // Reveal all columns and save status if completed or failed
+  useEffect(() => {
+    if (status === "completed" || status === "failed") {
+      // Reveal all columns
+      const allVisible: { [key: string]: boolean } = {};
+      headers.forEach(header => {
+        allVisible[header] = true;
+      });
+      setVisibleColumns(allVisible);
+      // Save status to localStorage
+      localStorage.setItem(`status_${difficulty}`, status);
+      // Optionally, save visible columns as well
+      localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(allVisible));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, headers.join(','), difficulty]);
 
   const toggleColumn = (column: string) => {
+    console.log(`Toggling column: ${column}`);
     setVisibleColumns(prev => ({
       ...prev,
       [column]: !prev[column]
     }));
   };
 
+  // Example: Call this when the player is correctly guessed
+  const handleComplete = () => {
+    setStatus("completed");
+  };
+
+  // Example: Call this when the user runs out of guesses
+  const handleFail = () => {
+    setStatus("failed");
+  };
+
   return (
     <div>
       <h2>Player Stats: </h2>
-      
+      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '18px' }}>
+        Points: {points}
+      </div>
+      {/* Status display */}
+      {status === "completed" && (
+        <div style={{ color: "#4CAF50", fontWeight: "bold", marginBottom: 8 }}>Completed!</div>
+      )}
+      {status === "failed" && (
+        <div style={{ color: "#ff4444", fontWeight: "bold", marginBottom: 8 }}>Failed!</div>
+      )}
       {/* Reset Progress button */}
       <div style={{ marginBottom: '10px' }}>
         <button
           onClick={() => {
             localStorage.removeItem(`visibleColumns_${difficulty}`);
+            localStorage.removeItem(`points_${difficulty}`);
+            localStorage.removeItem(`status_${difficulty}`);
             setVisibleColumns({});
+            setPoints(100);
+            setStatus("incomplete");
           }}
           style={{
             padding: '8px 16px',
@@ -64,7 +145,11 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
           Reset Progress
         </button>
       </div>
-
+      {/* For demonstration, add buttons to simulate complete/fail */}
+      <div style={{ marginBottom: 10 }}>
+        <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
+        <button onClick={handleFail}>Simulate Fail</button>
+      </div>
       {/* Table */}
       {csvData.length > 0 ? (
         <table style={{ 
@@ -72,8 +157,26 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
           width: '100%',
           tableLayout: 'fixed'
         }}>
-          {/* Button row - now at top */}
           <thead>
+            {/* Point cost row */}
+            <tr>
+              {headers.map((header) => (
+                <th
+                  key={`cost-${header}`}
+                  style={{
+                    border: '1px solid #ddd',
+                    padding: '4px',
+                    textAlign: 'center',
+                    backgroundColor: '#fffbe6',
+                    fontWeight: 'normal',
+                    fontSize: '12px'
+                  }}
+                >
+                  Cost: {getPointCost(header)}
+                </th>
+              ))}
+            </tr>
+            {/* Button row */}
             <tr>
               {headers.map((header) => (
                 <th 
@@ -87,8 +190,17 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
                   }}
                 >
                   <button
-                    onClick={() => toggleColumn(header)}
-                    disabled={visibleColumns[header]}
+                    onClick={() => {
+                      const cost = getPointCost(header);
+                      if (!visibleColumns[header] && points >= cost && status === "incomplete") {
+                        setVisibleColumns(prev => ({
+                          ...prev,
+                          [header]: true
+                        }));
+                        setPoints(prev => prev - cost);
+                      }
+                    }}
+                    disabled={visibleColumns[header] || status !== "incomplete"}
                     style={{
                       padding: '4px 8px',
                       backgroundColor: visibleColumns[header] 
@@ -111,7 +223,6 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
               ))}
             </tr>
           </thead>
-          
           <tbody>
             {/* Header row - now second */}
             <tr>
@@ -133,7 +244,6 @@ export default function GridDisplay({ csvData, difficulty }: GridDisplayProps) {
                 </td>
               ))}
             </tr>
-            
             {/* Data rows */}
             {csvData.map((row, index) => (
               <tr key={index}>

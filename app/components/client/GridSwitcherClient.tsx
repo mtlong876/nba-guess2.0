@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { checkPlayerGuess, getAllPlayerNames } from '../../actions/playerActions';
+import { checkPlayerGuess, getAllPlayerNames , checkDailyGuess} from '../../actions/playerActions';
 
 type GridSwitcherClientProps = {
   tables: {
@@ -48,7 +48,7 @@ export default function GridSwitcherClient({ tables, playerData, children }: Gri
       setFeedback('Please enter a guess!');
       return;
     }
-
+    
     const currentGuessesLeft = guessesRemaining[selected] || 0;
     if (currentGuessesLeft <= 0) {
       setFeedback('No guesses remaining for this difficulty!');
@@ -58,10 +58,16 @@ export default function GridSwitcherClient({ tables, playerData, children }: Gri
     setIsChecking(true);
     
     try {
-      const currentPlayerFilename = playerData[selected].playerFilename;
-      const result = await checkPlayerGuess(guess, currentPlayerFilename);
-      setFeedback(result.message);
-      
+      let result: any;
+      if (!tables[selected].daily){
+        const currentPlayerFilename = playerData[selected].playerFilename;
+        
+        result = await checkPlayerGuess(guess, currentPlayerFilename);
+        setFeedback(result.message);
+      }else{
+        result = await checkDailyGuess(guess, selected);
+        setFeedback(result.message);
+      }
       if (result.correct) {
         setGuess(''); // Clear input on correct guess
         // Mark this difficulty as correctly guessed

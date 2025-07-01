@@ -46,7 +46,6 @@ export default async function GridSwitcher() {
 			return { csvData, playerFilename };
 		})
 	);
-
 	return (
 		<div>
 			<h1>NBA Guess Grids</h1>

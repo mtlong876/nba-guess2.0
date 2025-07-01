@@ -3,17 +3,15 @@ import GridDisplay from '../client/GridDisplay';
 
 type GridContainerProps = {
   difficulty: string;
-  daily: boolean;
+  csvData?: any;
 };
 
-export default async function GridContainer({ difficulty, daily }: GridContainerProps) {
-  const { csvData, playerFilename } = await getPlayerData(difficulty, daily);
-  
+export default async function GridContainer({ difficulty,csvData }: GridContainerProps) {
+
   return (
     <GridDisplay 
       csvData={csvData} 
       difficulty={difficulty}
-      playerFilename={playerFilename}
     />
   );
 }
