@@ -3,6 +3,8 @@
 import { useRef, useState ,useEffect } from 'react';
 import GridSwitcherClient from '../client/GridSwitcherClient';
 import GridDisplay from '../client/GridDisplay';
+import { getAllPlayerNames } from '../../actions/playerActions';
+
 type GridSharedProps = {
   tables: any[];
   allPlayerData: any[];
@@ -14,6 +16,7 @@ const difficulties: Difficulty[] = [
 ];
 
 export default function GridShared({tables, allPlayerData}: GridSharedProps) {
+    const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
     const [status, setStatus] = useState<Record<Difficulty, Status>>({
         easy: "incomplete",
         medium: "incomplete",
@@ -22,6 +25,15 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
         recentP: "incomplete",
         recentS: "incomplete",
     });
+
+    useEffect(() => {
+    const loadPlayerNames = async () => {
+      const names = await getAllPlayerNames();
+      setAllPlayerNames(names);
+    };
+    loadPlayerNames();
+    }, []);
+  
     const [statusLoaded, setStatusLoaded] = useState(false);
     const loadedRef = useRef(false);
 
@@ -71,7 +83,10 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
                     <GridDisplay
                         key={table.difficulty}
                         csvData={allPlayerData[index].csvData}
+                        playerFilename={allPlayerData[index].playerFilename}
                         difficulty={table.difficulty}
+                        daily={table.daily}
+                        allPlayerNames={allPlayerNames}
                         onStatusChange={handleStatusChange}
                     />
                 ))}

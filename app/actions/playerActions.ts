@@ -143,10 +143,10 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
   }
 }
 
-export async function checkDailyGuess(guess: string, difficulty: number) {
+export async function checkDailyGuess(guess: string, difficulty: keyof typeof daily) {
   try{
-      const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
-      const playerFilename = daily[difficultyFile]
+      //const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
+      const playerFilename = daily[difficulty]
       const actualPlayerName = playerFilename
         .replace('.csv', '')
         .replace(/_\d+$/, '') // Remove ID at end

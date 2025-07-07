@@ -1,27 +1,30 @@
 'use client';
 
 import { useState, useEffect,useRef} from 'react';
+import { checkPlayerGuess, getAllPlayerNames , checkDailyGuess} from '../../actions/playerActions';
 
 type GridDisplayProps = {
   csvData: { [key: string]: string }[];
   difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS";
+  daily: boolean;
+  playerFilename: string; // Optional, used for daily challenges
+  allPlayerNames: string[];
   onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
 };
 
-export default function GridDisplay({ csvData, difficulty , onStatusChange}: GridDisplayProps) {
+export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange}: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
   const [points, setPoints] = useState(100); // Start with 100 points
   const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
+  const [currentGuessesLeft, setCurrentGuessesLeft] = useState<number>(3); // Replace with actual logic to track guesses left
+  const [guess, setGuess] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
+  const [correctGuess , setCorrectGuess] = useState(false);
+  
   const firstLoad = useRef(true);
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
-  useEffect(() => {
-    if (difficulty != changingDiffculty) {
-      return;
-    }
-      if (onStatusChange) {
-        onStatusChange(difficulty, status);
-      }
-    }, [status]);
+
 
   // Example: Each column costs 10 points to reveal
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
@@ -42,12 +45,23 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
   "3P%": 10,
   "FT%": 10
   };
-  let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty; 
+  let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
+  
+  useEffect(() => {
+  if (difficulty != changingDiffculty) {
+    return;
+  }
+    if (onStatusChange) {
+      onStatusChange(difficulty, status);
+    }
+  }, [status]);
   // Reset points and visible columns when difficulty changes
   useEffect(() => {
     changingDiffculty = difficulty;
     const savedStatus = localStorage.getItem(`status_${difficulty}`);
     setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
+    const savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
+    console.log("Saved guesses:", savedGuesses);
     const savedPoints = localStorage.getItem(`points_${difficulty}`);
     const savedVisible = localStorage.getItem(`visibleColumns_${difficulty}`);
     if (savedVisible) {
@@ -69,6 +83,16 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
     } else {
       setPoints(100); // Reset to default if no saved points
     }
+    if (savedGuesses) {
+      try {
+        setCurrentGuessesLeft(parseInt(savedGuesses, 10));
+      } catch (error) {
+        console.error('Error parsing saved guesses:', error);
+        setCurrentGuessesLeft(3); // Reset to default if parsing fails
+      }
+    } else {
+      setCurrentGuessesLeft(3); // Reset to default if no saved guesses
+    }
     changingDiffculty = null;
     firstLoad.current = true;
   }, [difficulty]);
@@ -80,6 +104,7 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
     }
     localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(visibleColumns));
     localStorage.setItem(`points_${difficulty}`, points.toString());
+    localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
   }, [visibleColumns, difficulty]);
 
   // Reveal all columns and save status if completed or failed
@@ -87,21 +112,18 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
     if (difficulty != changingDiffculty) {
       return;
     }
-    if (firstLoad.current) {
-      firstLoad.current = false;
-      return; // Skip saving on first load
-    }
     if (status === "completed" || status === "failed") {
       const allVisible: { [key: string]: boolean } = {};
       headers.forEach(header => {
         allVisible[header] = true;
       });
       setVisibleColumns(allVisible);
-      console.log(status);
       localStorage.setItem(`status_${difficulty}`, status);
       localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(allVisible));
+      localStorage.setItem(`points_${difficulty}`, points.toString());
+      localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
     }
-    //console.log(`Status changed to: ${status}`);
+    
   }, [status, difficulty]);
 
 
@@ -116,13 +138,75 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
 
   // Example: Call this when the player is correctly guessed
   const handleComplete = () => {
+    setCorrectGuess(true);
+    setCurrentGuessesLeft(0); // Reset guesses left
     setStatus("completed");
   };
 
   // Example: Call this when the user runs out of guesses
   const handleFail = () => {
     setStatus("failed");
+    setCurrentGuessesLeft(0);
+    setPoints(0);
   };
+
+
+  const isCurrentPlayerGuessed = correctGuess; // Replace with actual logic to check if the current player is guessed
+  const isInputDisabled = status != "incomplete" // Disable input if player is guessed or no guesses left
+  
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    const isCurrentPlayerGuessed = correctGuess || false;
+    
+    if (e.key === 'Enter' && !isChecking && currentGuessesLeft > 0 && !isCurrentPlayerGuessed) {
+      handleGuess();
+    }
+  };
+
+  const handleGuess = async () => {
+      if (guess.trim() === '') {
+        setFeedback('Please enter a guess!');
+        return;
+      }
+      
+      if (currentGuessesLeft <= 0) {
+        setFeedback('No guesses remaining for this difficulty!');
+        return;
+      }
+  
+      setIsChecking(true);
+      
+      try {
+        let result: any;
+        if (!daily){
+          const currentPlayerFilename = playerFilename;
+          result = await checkPlayerGuess(guess, currentPlayerFilename);
+          setFeedback(result.message);
+        }else{
+          result = await checkDailyGuess(guess, difficulty);
+          console.log("Daily guess result:", result);
+          setFeedback(result.message);
+        }
+        if (result.correct) {
+          setGuess(''); // Clear input on correct guess
+          handleComplete();
+          // if (onStatusChange) {
+          //   onStatusChange(difficulties[selected], "completed");
+          // }
+        } else {
+          setGuess('');
+          setCurrentGuessesLeft(prev => prev - 1);
+          localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+          if (currentGuessesLeft - 1 <= 0) {
+            handleFail();
+            setFeedback('No guesses remaining! Please try again tomorrow.');
+          }
+        }
+      } catch (error) {
+        setFeedback('Error checking guess. Please try again.');
+      } finally {
+        setIsChecking(false);
+      }
+    };
 
   return (
     <div>
@@ -144,6 +228,8 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
             localStorage.removeItem(`visibleColumns_${difficulty}`);
             localStorage.removeItem(`points_${difficulty}`);
             localStorage.removeItem(`status_${difficulty}`);
+            localStorage.removeItem(`guesses_${difficulty}`);
+            setCurrentGuessesLeft(3); // Reset guesses left
             setVisibleColumns({});
             setPoints(100);
             setStatus("incomplete");
@@ -285,6 +371,103 @@ export default function GridDisplay({ csvData, difficulty , onStatusChange}: Gri
       ) : (
         <p>No data available</p>
       )}
+
+      <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+        <h3>
+          Guess the Player
+          {isCurrentPlayerGuessed && (
+            <span style={{ color: '#4CAF50', marginLeft: '10px' }}>✓ Solved!</span>
+          )}
+          {currentGuessesLeft <= 0 && !isCurrentPlayerGuessed && (
+            <span style={{ color: '#ff4444', marginLeft: '10px' }}>✗ No guesses remaining!</span>
+          )}
+          {currentGuessesLeft > 0 && !isCurrentPlayerGuessed && (
+            <span style={{ color: '#ffa500', marginLeft: '10px' }}>
+              ({currentGuessesLeft} guess{currentGuessesLeft !== 1 ? 'es' : ''} remaining)
+            </span>
+          )}
+        </h3>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={guess}
+            onChange={(e) => setGuess(e.target.value)}
+            onKeyDown = {handleKeyPress}
+            onKeyUp = {(e) => console.log(isInputDisabled)}
+            placeholder={
+              isCurrentPlayerGuessed 
+                ? "Player already guessed!" 
+                : currentGuessesLeft <= 0 
+                  ? "No guesses remaining!" 
+                  : "Enter player name..."
+            }
+            disabled={isInputDisabled}
+            list="playerNames"
+            style={{
+              padding: '10px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '16px',
+              flex: '1',
+              maxWidth: '300px',
+              opacity: isInputDisabled ? 0.6 : 1,
+              backgroundColor: isCurrentPlayerGuessed 
+                ? '#d4edda' 
+                : currentGuessesLeft <= 0 
+                  ? '#f8d7da' 
+                  : 'white'
+            }}
+          />
+          <datalist id="playerNames">
+            {allPlayerNames.map((playerName, index) => (
+              <option key={index} value={playerName}>
+                {playerName}
+              </option>
+            ))}
+          </datalist>
+          <button
+            onClick={handleGuess}
+            disabled={isInputDisabled}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: isCurrentPlayerGuessed 
+                ? '#4CAF50' 
+                : currentGuessesLeft <= 0
+                  ? '#ff4444'
+                  : isChecking 
+                    ? '#cccccc' 
+                    : '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isInputDisabled ? 'not-allowed' : 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            {isCurrentPlayerGuessed 
+              ? 'Solved!' 
+              : currentGuessesLeft <= 0
+                ? 'Failed!'
+                : isChecking 
+                  ? 'Checking...' 
+                  : 'Guess'
+            }
+          </button>
+        </div>
+        
+        {feedback && (
+          <div style={{ 
+            marginTop: '10px', 
+            padding: '8px', 
+            backgroundColor: feedback.includes('🎉') ? '#d4edda' : '#f8d7da', 
+            border: `1px solid ${feedback.includes('🎉') ? '#c3e6cb' : '#f5c6cb'}`,
+            borderRadius: '4px',
+            color: feedback.includes('🎉') ? '#155724' : '#721c24'
+          }}>
+            {feedback}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
