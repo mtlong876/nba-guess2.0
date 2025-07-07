@@ -1,4 +1,5 @@
-import GridSwitcherClient from '../client/GridSwitcherClient';
+export const dynamic = "force-dynamic";
+
 import GridShared from '../client/GridShared';
 import { getPlayerData } from '../../actions/playerActions';
 
