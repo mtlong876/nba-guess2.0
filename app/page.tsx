@@ -1,6 +1,6 @@
-// import dynamic from 'next/dynamic'
-// const GridSwitcher = dynamic(() => import('./components/server/GridSwitcher'))
-import GridSwitcher from "./components/server/GridSwitcher";
+import dynamic from 'next/dynamic'
+const GridSwitcher = dynamic(() => import('./components/server/GridSwitcher'))
+// import GridSwitcher from "./components/server/GridSwitcher";
 import { Suspense } from 'react';
 export default function Home() {
   return (
