@@ -1,6 +1,7 @@
 
 import GridShared from '../client/GridShared';
 import { getPlayerData } from '../../actions/playerActions';
+import { revalidateTag } from 'next/cache'
 
 const tables = [
 	{
@@ -46,6 +47,7 @@ export default async function GridSwitcher() {
 			return { csvData, playerFilename };
 		})
 	);
+	revalidateTag('players')
 	return (
 		<div>
 			<h1>NBA Guess Grids</h1>

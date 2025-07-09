@@ -4,7 +4,6 @@ import { useRef, useState ,useEffect } from 'react';
 import GridSwitcherClient from '../client/GridSwitcherClient';
 import GridDisplay from '../client/GridDisplay';
 import { getAllPlayerNames } from '../../actions/playerActions';
-import { revalidateTag } from 'next/cache'
 
 type GridSharedProps = {
   tables: any[];
@@ -31,7 +30,6 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
     const loadPlayerNames = async () => {
       const names = await getAllPlayerNames();
       setAllPlayerNames(names);
-      revalidateTag('players')
     };
     loadPlayerNames();
     }, []);
