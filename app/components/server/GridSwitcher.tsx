@@ -2,7 +2,7 @@
 import GridShared from '../client/GridShared';
 import { getPlayerData } from '../../actions/playerActions';
 import { revalidateTag } from 'next/cache'
-
+export const dynamic = "force-dynamic";
 
 const tables = [
 	{
@@ -39,21 +39,21 @@ const tables = [
 
 export default async function GridSwitcher() {
 	// Pre-fetch all player data on the server
-	// const allPlayerData = await Promise.all(
-	// 	tables.map(async (table) => {
-	// 		const { csvData, playerFilename } = await getPlayerData(
-	// 			table.difficulty,
-	// 			table.daily
-	// 		);
-	// 		return { csvData, playerFilename };
-	// 	})
-	// );
+	const allPlayerData = await Promise.all(
+		tables.map(async (table) => {
+			const { csvData, playerFilename } = await getPlayerData(
+				table.difficulty,
+				table.daily
+			);
+			return { csvData, playerFilename };
+		})
+	);
 	//revalidateTag('players')
 	return (
 		<div>
 			<h1>NBA Guess Grids</h1>
 			
-				<GridShared tables={tables}/>
+				<GridShared tables={tables} allPlayerData={allPlayerData}/>
 
 		</div>
 	);

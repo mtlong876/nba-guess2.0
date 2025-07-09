@@ -7,7 +7,7 @@ import { getAllPlayerNames, getPlayerData } from '../../actions/playerActions';
 
 type GridSharedProps = {
   tables: any[];
-//   allPlayerData: any[];
+   allPlayerData: any[];
 };
 type Difficulty = "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS";
 type Status = "incomplete" | "completed" | "failed";
@@ -15,9 +15,9 @@ const difficulties: Difficulty[] = [
   "easy", "medium", "hard", "chaos", "recentP", "recentS"
 ];
 
-export default function GridShared({tables/*, allPlayerData*/}: GridSharedProps) {
+export default function GridShared({tables, allPlayerData}: GridSharedProps) {
     const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
-    const [allPlayerData, setAllPlayerData] = useState<any[]>([]);
+    // const [allPlayerData, setAllPlayerData] = useState<any[]>([]);
     const [status, setStatus] = useState<Record<Difficulty, Status>>({
         easy: "incomplete",
         medium: "incomplete",
@@ -32,19 +32,19 @@ export default function GridShared({tables/*, allPlayerData*/}: GridSharedProps)
       const names = await getAllPlayerNames();
       setAllPlayerNames(names);
     };
-    const loadPlayerData = async () => {
-        const t = await Promise.all(
-            tables.map(async (table) => {
-                const { csvData, playerFilename } = await getPlayerData(
-                    table.difficulty,
-                    table.daily
-                );
-                return { csvData, playerFilename };
-            })
-	    );
-        setAllPlayerData(t);
-    }
-    loadPlayerData()
+    // const loadPlayerData = async () => {
+    //     const t = await Promise.all(
+    //         tables.map(async (table) => {
+    //             const { csvData, playerFilename } = await getPlayerData(
+    //                 table.difficulty,
+    //                 table.daily
+    //             );
+    //             return { csvData, playerFilename };
+    //         })
+	//     );
+    //     setAllPlayerData(t);
+    // }
+    // loadPlayerData()
     loadPlayerNames();
     }, []);
 
