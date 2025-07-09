@@ -48,6 +48,7 @@ export default async function GridSwitcher() {
 			return { csvData, playerFilename };
 		})
 	);
+	console.log('All player data loaded:', allPlayerData);
 	//revalidateTag('players')
 	return (
 		<div>
