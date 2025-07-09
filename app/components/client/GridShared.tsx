@@ -3,11 +3,11 @@
 import { useRef, useState ,useEffect } from 'react';
 import GridSwitcherClient from '../client/GridSwitcherClient';
 import GridDisplay from '../client/GridDisplay';
-import { getAllPlayerNames } from '../../actions/playerActions';
+import { getAllPlayerNames, getPlayerData } from '../../actions/playerActions';
 
 type GridSharedProps = {
   tables: any[];
-  allPlayerData: any[];
+//   allPlayerData: any[];
 };
 type Difficulty = "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS";
 type Status = "incomplete" | "completed" | "failed";
@@ -15,8 +15,9 @@ const difficulties: Difficulty[] = [
   "easy", "medium", "hard", "chaos", "recentP", "recentS"
 ];
 
-export default function GridShared({tables, allPlayerData}: GridSharedProps) {
+export default function GridShared({tables/*, allPlayerData*/}: GridSharedProps) {
     const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
+    const [allPlayerData, setAllPlayerData] = useState<any[]>([]);
     const [status, setStatus] = useState<Record<Difficulty, Status>>({
         easy: "incomplete",
         medium: "incomplete",
@@ -31,9 +32,24 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
       const names = await getAllPlayerNames();
       setAllPlayerNames(names);
     };
+    const loadPlayerData = async () => {
+        const t = await Promise.all(
+            tables.map(async (table) => {
+                const { csvData, playerFilename } = await getPlayerData(
+                    table.difficulty,
+                    table.daily
+                );
+                return { csvData, playerFilename };
+            })
+	    );
+        setAllPlayerData(t);
+    }
+    loadPlayerData()
     loadPlayerNames();
     }, []);
-  
+
+    
+
     const [statusLoaded, setStatusLoaded] = useState(false);
     const loadedRef = useRef(false);
 
