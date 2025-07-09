@@ -2,6 +2,7 @@
 import GridShared from '../client/GridShared';
 import { getPlayerData } from '../../actions/playerActions';
 import { revalidateTag } from 'next/cache'
+import { Suspense } from 'react';
 
 const tables = [
 	{
@@ -47,11 +48,13 @@ export default async function GridSwitcher() {
 			return { csvData, playerFilename };
 		})
 	);
-	revalidateTag('players')
+	//revalidateTag('players')
 	return (
 		<div>
 			<h1>NBA Guess Grids</h1>
-			<GridShared tables={tables} allPlayerData={allPlayerData} />
+			<Suspense fallback={<div>Loading grids...</div>}>
+				<GridShared tables={tables} allPlayerData={allPlayerData} />
+			</Suspense>
 		</div>
 	);
 }
