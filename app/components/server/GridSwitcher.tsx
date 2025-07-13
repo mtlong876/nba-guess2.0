@@ -4,21 +4,23 @@ import { getPlayerData } from '../../actions/playerActions';
 import { revalidateTag } from 'next/cache'
 export const dynamic = "force-dynamic";
 
-const tables = [
+type Difficulty = "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS";
+
+const tables: { title: string; difficulty: Difficulty; daily: boolean }[] = [
 	{
 		title: 'Easy',
 		difficulty: 'easy',
-		daily: false,
+		daily: true,
 	},
 	{
 		title: 'Medium',
 		difficulty: 'medium',
-		daily: false,
+		daily: true,
 	},
 	{
 		title: 'Hard',
 		difficulty: 'hard',
-		daily: false,
+		daily: true,
 	},
 	{
 		title: 'Chaos',
@@ -28,12 +30,12 @@ const tables = [
 	{
 		title: 'Recent Players',
 		difficulty: 'recentP',
-		daily: false,
+		daily: true,
 	},
 	{
 		title: 'Recent Starters',
 		difficulty: 'recentS',
-		daily: false,
+		daily: true,
 	},
 ];
 
@@ -48,11 +50,11 @@ export default async function GridSwitcher() {
 			return { csvData, playerFilename };
 		})
 	);
-	console.log('All player data loaded:', allPlayerData);
+	//console.log('All player data loaded:', allPlayerData);
 	//revalidateTag('players')
 	return (
 		<div>
-			<h1>NBA Guess Grids</h1>
+			<h1>NBA Guess Grids: Daily</h1>
 			
 				<GridShared tables={tables} allPlayerData={allPlayerData}/>
 

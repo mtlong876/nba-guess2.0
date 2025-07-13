@@ -3,7 +3,7 @@
 import { useRef, useState ,useEffect } from 'react';
 import GridSwitcherClient from '../client/GridSwitcherClient';
 import GridDisplay from '../client/GridDisplay';
-import { getAllPlayerNames, getPlayerData } from '../../actions/playerActions';
+import { getAllPlayerNames} from '../../actions/playerActions';
 
 type GridSharedProps = {
   tables: any[];
@@ -17,7 +17,6 @@ const difficulties: Difficulty[] = [
 
 export default function GridShared({tables, allPlayerData}: GridSharedProps) {
     const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
-    // const [allPlayerData, setAllPlayerData] = useState<any[]>([]);
     const [status, setStatus] = useState<Record<Difficulty, Status>>({
         easy: "incomplete",
         medium: "incomplete",
@@ -26,25 +25,30 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
         recentP: "incomplete",
         recentS: "incomplete",
     });
-
+    const [score, setScore] = useState<Record<Difficulty, number>>({
+        easy: 0,
+        medium: 0,
+        hard: 0,
+        chaos: 0,
+        recentP: 0,
+        recentS: 0,
+    });
+    const [multi, setMulti] = useState<Record<Difficulty, number>>({
+        easy: 0,
+        medium: 0,
+        hard: 0,
+        chaos: 0,
+        recentP: 0,
+        recentS: 0,
+    });
+    const totalScore = Object.values(score).reduce((sum, val) => sum + val, 0);
+    const totalMulti = Object.values(multi).reduce((sum, val) => sum + val, 0);
+    const finalScore = totalScore * totalMulti;
     useEffect(() => {
     const loadPlayerNames = async () => {
       const names = await getAllPlayerNames();
       setAllPlayerNames(names);
     };
-    // const loadPlayerData = async () => {
-    //     const t = await Promise.all(
-    //         tables.map(async (table) => {
-    //             const { csvData, playerFilename } = await getPlayerData(
-    //                 table.difficulty,
-    //                 table.daily
-    //             );
-    //             return { csvData, playerFilename };
-    //         })
-	//     );
-    //     setAllPlayerData(t);
-    // }
-    // loadPlayerData()
     loadPlayerNames();
     }, []);
 
@@ -54,13 +58,10 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
     const loadedRef = useRef(false);
 
     const handleStatusChange = (difficulty: Difficulty, newStatus: Status) => {
-        console.log(`Status changed for ${difficulty}: ${newStatus}`);
         setStatus(prevStatus => ({
             ...prevStatus,
             [difficulty]: newStatus,
         }));
-        // Optionally update localStorage here
-        // localStorage.setItem(`status_${difficulty}`, newStatus);
     };
 
     useEffect(() => {
@@ -83,17 +84,18 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
             setStatus(loadedStatus);
         }
         setStatusLoaded(true);
-        // eslint-disable-next-line
     }, []);
 
-    if (!statusLoaded){ return null;} // or a loading spinner
+    if (!statusLoaded){ return null;}
 
     return (
         <div>
+            <div style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '16px' }}>
+                Total Score: {totalScore} x Multi: {totalMulti} = Final Score: {finalScore}
+            </div>
             <GridSwitcherClient
                 tables={tables}
-                playerData={allPlayerData}
-                onStatusChange={handleStatusChange}
+                status={status}
             >
                 {tables.map((table, index) => (
                     <GridDisplay
@@ -104,9 +106,22 @@ export default function GridShared({tables, allPlayerData}: GridSharedProps) {
                         daily={table.daily}
                         allPlayerNames={allPlayerNames}
                         onStatusChange={handleStatusChange}
+                        setScore={(newScore) =>
+                            setScore(prev => ({
+                            ...prev,
+                            [table.difficulty as Difficulty]: newScore
+                            }))
+                        }
+                        setMulti={(newMulti) =>
+                            setMulti(prev => ({
+                            ...prev,
+                            [table.difficulty as Difficulty]: newMulti
+                            }))
+                        }
                     />
                 ))}
             </GridSwitcherClient>
         </div>
+
     );
 }

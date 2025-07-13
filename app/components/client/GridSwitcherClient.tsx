@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect,useRef } from 'react';
-import { checkPlayerGuess, getAllPlayerNames , checkDailyGuess} from '../../actions/playerActions';
-import GridDisplay from './GridDisplay';
+import { useState} from 'react';
 
 
 type GridSwitcherClientProps = {
@@ -11,41 +9,19 @@ type GridSwitcherClientProps = {
     difficulty: string;
     daily: boolean;
   }[];
-  playerData: {
-    csvData: { [key: string]: string }[];
-    playerFilename: string;
-  }[];
   children: React.ReactNode[];
-  onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
+  status: Record<"easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS", "incomplete" | "completed" | "failed">;
 };
 
-export default function GridSwitcherClient({ tables, playerData, children ,onStatusChange}: GridSwitcherClientProps) {
+export default function GridSwitcherClient({ tables, children ,status}: GridSwitcherClientProps) {
   const [selected, setSelected] = useState(0);
-  const [guessesRemaining, setGuessesRemaining] = useState<{ [key: number]: number }>({});
-  const [correctGuesses, setCorrectGuesses] = useState<{ [key: number]: boolean }>({});
-  const difficulties: ("easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS")[] = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
-  const prevStatusRef = useRef<{ [key: number]: string }>({});
-
-  useEffect(() => {
-    const initialGuesses: { [key: number]: number } = {};
-    tables.forEach((_, index) => {
-      initialGuesses[index] = 3; // Starting value of 3
-    });
-    setGuessesRemaining(initialGuesses);
-  }, [tables]);
-
-  // Load player names on component mount
-
-  const currentGuessesLeft = guessesRemaining[selected] || 0;
-  const isCurrentPlayerGuessed = correctGuesses[selected] || false;
-
+  const difficultiesArray = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
   return (
     <div>
       <div style={{ marginBottom: '20px' }}>
         {tables.map((table, index) => {
-          const guessesLeft = guessesRemaining[index] || 0;
-          const isSolved = correctGuesses[index] || false;
-          const isFailed = guessesLeft <= 0 && !isSolved;
+          const isSolved = status[difficultiesArray[index] as keyof typeof status] === "completed";
+          const isFailed = status[difficultiesArray[index] as keyof typeof status] === "failed";
           
           return (
             <button 

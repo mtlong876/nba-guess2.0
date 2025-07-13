@@ -2,8 +2,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import daily from '../difficulties/daily.json';
-const difficulties = Object.keys(daily);
+import dailyFile from '../difficulties/daily.json';
+const difficulties = Object.keys(dailyFile);
 
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
@@ -143,10 +143,10 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
   }
 }
 
-export async function checkDailyGuess(guess: string, difficulty: keyof typeof daily) {
+export async function checkDailyGuess(guess: string, difficulty: keyof typeof dailyFile) {
   try{
       //const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
-      const playerFilename = daily[difficulty]
+      const playerFilename = dailyFile[difficulty]
       const actualPlayerName = playerFilename
         .replace('.csv', '')
         .replace(/_\d+$/, '') // Remove ID at end
@@ -173,14 +173,14 @@ export async function checkDailyGuess(guess: string, difficulty: keyof typeof da
   }
 }
 
-export async function getPlayerData(difficulty: string, daily: boolean) {
+export async function getPlayerData(difficulty: keyof typeof dailyFile, daily: boolean) {
   let player: string;
-  
+  console.log(dailyFile,difficulty)
   if (!daily) {
     const dataArray = loadFileToArray(difficulty);
     player = getRandomEntry(dataArray);
   } else {
-    player = "Kareem_Abdul-Jabbar_76003.csv";
+    player = dailyFile[difficulty];
   }
 
   const csvData = loadCSVToObject(player);

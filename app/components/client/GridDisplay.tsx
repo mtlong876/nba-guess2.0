@@ -1,20 +1,23 @@
 'use client';
 
 import { useState, useEffect,useRef} from 'react';
-import { checkPlayerGuess, getAllPlayerNames , checkDailyGuess} from '../../actions/playerActions';
+import { checkPlayerGuess,checkDailyGuess} from '../../actions/playerActions';
+import { on } from 'events';
 
 type GridDisplayProps = {
   csvData: { [key: string]: string }[];
   difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS";
   daily: boolean;
-  playerFilename: string; // Optional, used for daily challenges
+  playerFilename: string;
   allPlayerNames: string[];
   onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
+  setScore: (newScore: number) => void;
+  setMulti: (newMulti: number) => void;
 };
 
-export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange}: GridDisplayProps) {
+export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange,setScore,setMulti}: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
-  const [points, setPoints] = useState(100); // Start with 100 points
+  const [points, setPoints] = useState(100);
   const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
   const [currentGuessesLeft, setCurrentGuessesLeft] = useState<number>(3); // Replace with actual logic to track guesses left
   const [guess, setGuess] = useState("");
@@ -26,7 +29,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
 
 
-  // Example: Each column costs 10 points to reveal
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
   const headerPointCost: { [key: string]: number } = {
   "Season": 5,
@@ -47,21 +49,20 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   };
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
   
-  useEffect(() => {
-  if (difficulty != changingDiffculty) {
-    return;
-  }
-    if (onStatusChange) {
-      onStatusChange(difficulty, status);
-    }
-  }, [status]);
-  // Reset points and visible columns when difficulty changes
+  // useEffect(() => {
+  // if (difficulty != changingDiffculty) {
+  //   return;
+  // }
+  //   if (onStatusChange) {
+  //     onStatusChange(difficulty, status);
+  //   }
+  // }, [status]);
+  
   useEffect(() => {
     changingDiffculty = difficulty;
     const savedStatus = localStorage.getItem(`status_${difficulty}`);
     setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
     const savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
-    console.log("Saved guesses:", savedGuesses);
     const savedPoints = localStorage.getItem(`points_${difficulty}`);
     const savedVisible = localStorage.getItem(`visibleColumns_${difficulty}`);
     if (savedVisible) {
@@ -97,7 +98,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     firstLoad.current = true;
   }, [difficulty]);
 
-  // Save to localStorage whenever state changes
+  
   useEffect(() => {
     if (difficulty != changingDiffculty) {
       return;
@@ -107,7 +108,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
   }, [visibleColumns, difficulty]);
 
-  // Reveal all columns and save status if completed or failed
+
   useEffect(() => {
     if (difficulty != changingDiffculty) {
       return;
@@ -128,24 +129,41 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
 
 
 
-  const toggleColumn = (column: string) => {
-    console.log(`Toggling column: ${column}`);
-    setVisibleColumns(prev => ({
-      ...prev,
-      [column]: !prev[column]
-    }));
-  };
+  // const toggleColumn = (column: string) => {
+  //   console.log(`Toggling column: ${column}`);
+  //   setVisibleColumns(prev => ({
+  //     ...prev,
+  //     [column]: !prev[column]
+  //   }));
+  // };
 
-  // Example: Call this when the player is correctly guessed
+ 
   const handleComplete = () => {
     setCorrectGuess(true);
-    setCurrentGuessesLeft(0); // Reset guesses left
     setStatus("completed");
+    onStatusChange?.(difficulty, "completed");
+    setScore(points);
+    switch (currentGuessesLeft) {
+      case 3:{
+        setMulti(2);
+        break;
+      }
+      case 2:{
+        setMulti(1.5);
+        break;
+      }
+      case 1:{
+        setMulti(1);
+        break;
+      }
+    }
+    setCurrentGuessesLeft(0); // Reset guesses left
   };
 
   // Example: Call this when the user runs out of guesses
   const handleFail = () => {
     setStatus("failed");
+    onStatusChange?.(difficulty, "failed");
     setCurrentGuessesLeft(0);
     setPoints(0);
   };
@@ -210,7 +228,14 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
 
   return (
     <div>
-      <h2>Player Stats: </h2>
+      <h2>
+        Player Stats:
+        {(status === "completed" || status === "failed") && (
+          <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
+            {playerFilename.replace('.csv', '').replace(/_\d+$/, '').replace(/_/g, ' ')}
+          </span>
+        )}
+      </h2>
       <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '18px' }}>
         Points: {points}
       </div>
@@ -347,25 +372,24 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
             </tr>
             {/* Data rows */}
             {csvData.map((row, index) => (
-              <tr key={index}>
-                {headers.map((header) => (
-                  <td 
-                    key={header}
-                    style={{ 
-                      border: '1px solid #ddd', 
-                      padding: '8px', 
-                      visibility: visibleColumns[header] ? 'visible' : 'hidden',
-                      textAlign: 'center',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {row[header]}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            <tr key={index}>
+              {headers.map((header) => (
+                <td
+                  key={header}
+                  style={{
+                    border: '1px solid #ddd',
+                    padding: '8px',
+                    textAlign: 'center',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {visibleColumns[header] ? row[header] : "‎"}
+                </td>
+              ))}
+            </tr>
+          ))}
           </tbody>
         </table>
       ) : (
