@@ -37,8 +37,8 @@ export async function reloadDailyData() {
     console.log('Data loaded from database:', data);
     return data;
 }
-
-let dailyData = await reloadDailyData();
+let dailyData: { [key: string]: string }[] = [];
+dailyData = await reloadDailyData();
 
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
