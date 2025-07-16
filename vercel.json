@@ -3,7 +3,7 @@
     "crons": [
         {
             "path": "/api/daily.ts",
-            "schedule": "5 * * * *"
+            "schedule": "0 15 * * *"
         }
     ]
 }
