@@ -3,7 +3,42 @@
 import fs from 'fs';
 import path from 'path';
 import dailyFile from '../difficulties/daily.json';
-const difficulties = Object.keys(dailyFile);
+import { neon } from "@neondatabase/serverless";
+const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
+
+export async function generateDailyData() {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+        throw new Error('DATABASE_URL environment variable is not set.');
+    }
+    const sql = neon(databaseUrl);
+    const players: Record<string, string> = {};
+    difficulties.forEach(difficulty => {
+      const dataArray = loadFileToArray(difficulty);
+      players[difficulty] = getRandomEntry(dataArray);
+    });
+    const currentTime = Math.floor(Date.now() / 1000);
+    let query = `INSERT INTO daily VALUES (${currentTime}`;
+    difficulties.forEach(difficulty => {
+        query += `, '${players[difficulty]}'`;
+    });
+    query += ");";
+
+    await sql.query(query);
+}
+//generateDailyData();
+export async function reloadDailyData() {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+        throw new Error('DATABASE_URL environment variable is not set.');
+    }
+    const sql = neon(databaseUrl);
+    const data = await sql`SELECT * FROM daily ORDER BY time_stamp DESC LIMIT 1;`;
+    console.log('Data loaded from database:', data);
+    return data;
+}
+
+let dailyData = await reloadDailyData();
 
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
@@ -175,12 +210,12 @@ export async function checkDailyGuess(guess: string, difficulty: keyof typeof da
 
 export async function getPlayerData(difficulty: keyof typeof dailyFile, daily: boolean) {
   let player: string;
-  console.log(dailyFile,difficulty)
   if (!daily) {
     const dataArray = loadFileToArray(difficulty);
     player = getRandomEntry(dataArray);
   } else {
-    player = dailyFile[difficulty];
+    //player = dailyFile[difficulty];
+    player = dailyData[0][difficulty.toLowerCase()];
   }
 
   const csvData = loadCSVToObject(player);
