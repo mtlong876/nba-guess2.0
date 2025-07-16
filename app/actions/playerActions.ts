@@ -5,6 +5,8 @@ import path from 'path';
 import dailyFile from '../difficulties/daily.json';
 import { neon } from "@neondatabase/serverless";
 const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
+let dailyData: { [key: string]: string }[] = [];
+dailyData = await reloadDailyData();
 
 export async function generateDailyData() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -25,6 +27,7 @@ export async function generateDailyData() {
     query += ");";
 
     await sql.query(query);
+    dailyData = await reloadDailyData();
 }
 //generateDailyData();
 export async function reloadDailyData() {
@@ -37,8 +40,7 @@ export async function reloadDailyData() {
     console.log('Data loaded from database:', data);
     return data;
 }
-let dailyData: { [key: string]: string }[] = [];
-dailyData = await reloadDailyData();
+
 
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
