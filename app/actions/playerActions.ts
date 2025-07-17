@@ -2,7 +2,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import dailyFile from '../difficulties/daily.json';
 import { neon } from "@neondatabase/serverless";
 const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
 let dailyData: { [key: string]: string }[] = [];
@@ -180,10 +179,10 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
   }
 }
 
-export async function checkDailyGuess(guess: string, difficulty: keyof typeof dailyFile) {
+export async function checkDailyGuess(guess: string, difficulty: string) {
   try{
       //const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
-      const playerFilename = dailyFile[difficulty]
+      const playerFilename = dailyData[0][difficulty.toLowerCase()];
       const actualPlayerName = playerFilename
         .replace('.csv', '')
         .replace(/_\d+$/, '') // Remove ID at end
@@ -210,7 +209,7 @@ export async function checkDailyGuess(guess: string, difficulty: keyof typeof da
   }
 }
 
-export async function getPlayerData(difficulty: keyof typeof dailyFile, daily: boolean) {
+export async function getPlayerData(difficulty: string, daily: boolean) {
   let player: string;
   if (!daily) {
     const dataArray = loadFileToArray(difficulty);

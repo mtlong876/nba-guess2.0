@@ -25,7 +25,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [isChecking, setIsChecking] = useState(false);
   const [correctGuess , setCorrectGuess] = useState(false);
   
-  const firstLoad = useRef(true);
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
 
 
@@ -59,6 +58,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   // }, [status]);
   
   useEffect(() => {
+    console.log("difficulty changed:", difficulty);
     changingDiffculty = difficulty;
     const savedStatus = localStorage.getItem(`status_${difficulty}`);
     setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
@@ -95,47 +95,47 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       setCurrentGuessesLeft(3); // Reset to default if no saved guesses
     }
     changingDiffculty = null;
-    firstLoad.current = true;
   }, [difficulty]);
 
-  
+
   useEffect(() => {
     if (difficulty != changingDiffculty) {
       return;
     }
+    saveProgress();
+  },[status,visibleColumns,points,currentGuessesLeft]);
+
+  const saveProgress = () => {
+    localStorage.setItem(`status_${difficulty}`, status);
     localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(visibleColumns));
     localStorage.setItem(`points_${difficulty}`, points.toString());
     localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
-  }, [visibleColumns, difficulty]);
+    // console.log(`Progress saved for ${difficulty}:`, {
+    //   status,
+    //   visibleColumns,
+    //   points,
+    //   currentGuessesLeft
+    // });
+  }
 
+  const toggleAllColumns = () => {
+    const allVisible: { [key: string]: boolean } = {};
+    headers.forEach(header => {
+      allVisible[header] = true;
+    });
+    setVisibleColumns(allVisible);
+  }
 
-  useEffect(() => {
-    if (difficulty != changingDiffculty) {
-      return;
+  const toggleColumn = (column: string) => {
+    const cost = getPointCost(column);
+    if (!visibleColumns[column] && points >= cost && status === "incomplete") {
+      setVisibleColumns(prev => ({
+        ...prev,
+        [column]: true
+      }));
+      setPoints(prev => prev - cost);
     }
-    if (status === "completed" || status === "failed") {
-      const allVisible: { [key: string]: boolean } = {};
-      headers.forEach(header => {
-        allVisible[header] = true;
-      });
-      setVisibleColumns(allVisible);
-      localStorage.setItem(`status_${difficulty}`, status);
-      localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(allVisible));
-      localStorage.setItem(`points_${difficulty}`, points.toString());
-      localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
-    }
-    
-  }, [status, difficulty]);
-
-
-
-  // const toggleColumn = (column: string) => {
-  //   console.log(`Toggling column: ${column}`);
-  //   setVisibleColumns(prev => ({
-  //     ...prev,
-  //     [column]: !prev[column]
-  //   }));
-  // };
+  };
 
  
   const handleComplete = () => {
@@ -143,6 +143,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     setStatus("completed");
     onStatusChange?.(difficulty, "completed");
     setScore(points);
+    toggleAllColumns(); // Show all columns on complete
     switch (currentGuessesLeft) {
       case 3:{
         setMulti(2);
@@ -166,6 +167,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     onStatusChange?.(difficulty, "failed");
     setCurrentGuessesLeft(0);
     setPoints(0);
+    toggleAllColumns(); // Show all columns on fail
   };
 
 
@@ -274,7 +276,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       {/* For demonstration, add buttons to simulate complete/fail */}
       <div style={{ marginBottom: 10 }}>
         <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
-        <button onClick={handleFail}>Simulate Fail</button>
+        <button onClick={handleFail}>Give up</button>
       </div>
       {/* Table */}
       {csvData.length > 0 ? (
@@ -317,14 +319,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
                 >
                   <button
                     onClick={() => {
-                      const cost = getPointCost(header);
-                      if (!visibleColumns[header] && points >= cost && status === "incomplete") {
-                        setVisibleColumns(prev => ({
-                          ...prev,
-                          [header]: true
-                        }));
-                        setPoints(prev => prev - cost);
-                      }
+                      toggleColumn(header);
                     }}
                     disabled={visibleColumns[header] || status !== "incomplete"}
                     style={{
@@ -417,7 +412,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
             onKeyDown = {handleKeyPress}
-            onKeyUp = {(e) => console.log(isInputDisabled)}
             placeholder={
               isCurrentPlayerGuessed 
                 ? "Player already guessed!" 
