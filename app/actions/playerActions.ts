@@ -5,7 +5,7 @@ import path from 'path';
 import { neon } from "@neondatabase/serverless";
 const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
 let dailyData: { [key: string]: string }[] = [];
-dailyData = await reloadDailyData();
+await reloadDailyData();
 
 export async function generateDailyData() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -26,7 +26,7 @@ export async function generateDailyData() {
     query += ");";
 
     await sql.query(query);
-    dailyData = await reloadDailyData();
+    await reloadDailyData();
 }
 //generateDailyData();
 export async function reloadDailyData() {
@@ -37,7 +37,7 @@ export async function reloadDailyData() {
     const sql = neon(databaseUrl);
     const data = await sql`SELECT * FROM daily ORDER BY time_stamp DESC LIMIT 1;`;
     console.log('Data loaded from database:', data);
-    return data;
+    dailyData = data;
 }
 
 
