@@ -41,7 +41,9 @@ const getDailyData = unstable_cache(async () => {
     const data = await sql`SELECT * FROM daily ORDER BY time_stamp DESC LIMIT 1;`;
     console.log('Data loaded from database:', data);
     return data;
-}, ['dailyData'])
+}, ['dailyData'],{
+  tags: ['dailyData']
+})
 
 console.log('Daily data loaded:', await getDailyData());
 function loadFileToArray(difficulty: string): string[] {
