@@ -3,9 +3,10 @@
 import fs from 'fs';
 import path from 'path';
 import { neon } from "@neondatabase/serverless";
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
-let dailyData: { [key: string]: string }[] = [];
-await reloadDailyData();
+// let dailyData: { [key: string]: string }[] = [];
+// await reloadDailyData();
 
 export async function generateDailyData() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -26,10 +27,12 @@ export async function generateDailyData() {
     query += ");";
 
     await sql.query(query);
-    await reloadDailyData();
+    revalidateTag('dailyData'); // Revalidate the cache for daily data
+    //await reloadDailyData();
 }
 //generateDailyData();
-export async function reloadDailyData() {
+
+const getDailyData = unstable_cache(async () => {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
         throw new Error('DATABASE_URL environment variable is not set.');
@@ -37,10 +40,10 @@ export async function reloadDailyData() {
     const sql = neon(databaseUrl);
     const data = await sql`SELECT * FROM daily ORDER BY time_stamp DESC LIMIT 1;`;
     console.log('Data loaded from database:', data);
-    dailyData = data;
-}
+    return data;
+}, ['dailyData'])
 
-
+console.log('Daily data loaded:', await getDailyData());
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
   const fileContent = fs.readFileSync(filepath, 'utf-8');
@@ -182,6 +185,7 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
 export async function checkDailyGuess(guess: string, difficulty: string) {
   try{
       //const difficultyFile: keyof typeof daily = difficulties[difficulty] as keyof typeof daily;
+      const dailyData = await getDailyData();
       const playerFilename = dailyData[0][difficulty.toLowerCase()];
       const actualPlayerName = playerFilename
         .replace('.csv', '')
@@ -211,6 +215,7 @@ export async function checkDailyGuess(guess: string, difficulty: string) {
 
 export async function getPlayerData(difficulty: string, daily: boolean) {
   let player: string;
+  const dailyData = await getDailyData();
   if (!daily) {
     const dataArray = loadFileToArray(difficulty);
     player = getRandomEntry(dataArray);
