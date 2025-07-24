@@ -5,8 +5,6 @@ import path from 'path';
 import { neon } from "@neondatabase/serverless";
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 const difficulties = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
-// let dailyData: { [key: string]: string }[] = [];
-// await reloadDailyData();
 
 export async function generateDailyData() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -28,9 +26,8 @@ export async function generateDailyData() {
 
     await sql.query(query);
     revalidateTag('dailyData'); // Revalidate the cache for daily data
-    //await reloadDailyData();
 }
-//generateDailyData();
+
 
 const getDailyData = unstable_cache(async () => {
     const databaseUrl = process.env.DATABASE_URL;
@@ -45,7 +42,11 @@ const getDailyData = unstable_cache(async () => {
   tags: ['dailyData']
 })
 
-console.log('Daily data loaded:', await getDailyData());
+export async function getDailyId(){
+  const dailyData = await getDailyData();
+  return dailyData[0].time_stamp;
+}
+
 function loadFileToArray(difficulty: string): string[] {
   const filepath = path.join(process.cwd(), './app/difficulties/', `${difficulty}.txt`);
   const fileContent = fs.readFileSync(filepath, 'utf-8');

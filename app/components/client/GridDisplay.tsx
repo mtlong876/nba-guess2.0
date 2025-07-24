@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect,useRef} from 'react';
 import { checkPlayerGuess,checkDailyGuess} from '../../actions/playerActions';
 import { on } from 'events';
@@ -30,21 +29,21 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
 
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
   const headerPointCost: { [key: string]: number } = {
-  "Season": 5,
-  "Team": 10,
-  "MIN": 10,
-  "GP": 10,
+  "Season": 50,
+  "Team": 75,
+  "MIN": 5,
+  "GP": 15,
   "GS": 10,
-  "PTS": 10,
+  "PTS": 25,
   "REB": 10,
   "AST": 10,
   "STL": 10,
   "BLK": 10,
-  "TOV": 10,
-  "PF": 10,
-  "FG%": 10,
-  "3P%": 10,
-  "FT%": 10
+  "TOV": 5,
+  "PF": 5,
+  "FG%": 5,
+  "3P%": 5,
+  "FT%": 5
   };
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
   
@@ -249,35 +248,39 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         <div style={{ color: "#ff4444", fontWeight: "bold", marginBottom: 8 }}>Failed!</div>
       )}
       {/* Reset Progress button */}
-      <div style={{ marginBottom: '10px' }}>
-        <button
-          onClick={() => {
-            localStorage.removeItem(`visibleColumns_${difficulty}`);
-            localStorage.removeItem(`points_${difficulty}`);
-            localStorage.removeItem(`status_${difficulty}`);
-            localStorage.removeItem(`guesses_${difficulty}`);
-            setCurrentGuessesLeft(3); // Reset guesses left
-            setVisibleColumns({});
-            setPoints(100);
-            setStatus("incomplete");
-          }}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#ff4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Reset Progress
-        </button>
-      </div>
+      {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
+        <div style={{ marginBottom: '10px' }}>
+          <button
+            onClick={() => {
+              localStorage.removeItem(`visibleColumns_${difficulty}`);
+              localStorage.removeItem(`points_${difficulty}`);
+              localStorage.removeItem(`status_${difficulty}`);
+              localStorage.removeItem(`guesses_${difficulty}`);
+              setCurrentGuessesLeft(3); // Reset guesses left
+              setVisibleColumns({});
+              setPoints(100);
+              setStatus("incomplete");
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#ff4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Reset Progress
+          </button>
+        </div>
+      )}
       {/* For demonstration, add buttons to simulate complete/fail */}
-      <div style={{ marginBottom: 10 }}>
-        <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
-        <button onClick={handleFail}>Give up</button>
-      </div>
+      { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
+        <div style={{ marginBottom: 10 }}>
+          <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
+          <button onClick={handleFail}>Give up</button>
+        </div>
+      )}
       {/* Table */}
       {csvData.length > 0 ? (
         <table style={{ 
