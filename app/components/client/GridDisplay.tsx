@@ -53,7 +53,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
   
 useEffect(() => {
-  if (status === "completed") {
+  if (status === "completed" || status === "failed") {
     getDailyName(difficulty).then((name) => {
       console.log("Daily player name:", name);
       setPlayerName(name); // if you want to display it
