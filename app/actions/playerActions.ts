@@ -71,15 +71,16 @@ function loadCSVToObject(filename: string): { [key: string]: string }[] {
     { original: 'SEASON_ID', display: 'Season' },
     { original: 'TEAM_ABBREVIATION', display: 'Team' },
     { original: 'MIN', display: 'MIN' },
-    { original: 'GP', display: 'GP' },
-    { original: 'GS', display: 'GS' },
+    // { original: 'GP', display: 'GP' },
+    // { original: 'GS', display: 'GS' },
+    { original: 'GP_GS', display: 'GP/GS' },
     { original: 'PTS', display: 'PTS' },
     { original: 'REB', display: 'REB' },
     { original: 'AST', display: 'AST' },
     { original: 'STL', display: 'STL' },
     { original: 'BLK', display: 'BLK' },
-    { original: 'TOV', display: 'TOV' },
-    { original: 'PF', display: 'PF' },
+    // { original: 'TOV', display: 'TOV' },
+    // { original: 'PF', display: 'PF' },
     { original: 'FG_PCT', display: 'FG%' },
     { original: 'FG3_PCT', display: '3P%' },
     { original: 'FT_PCT', display: 'FT%' },
@@ -126,6 +127,13 @@ function loadCSVToObject(filename: string): { [key: string]: string }[] {
     const games = parseFloat(row['GP']) || 1;
     
     columnsToInclude.forEach(column => {
+      if (column.original === 'GP_GS') {
+        // Combine GP and GS
+        const gp = row['GP'] ?? '-';
+        const gs = row['GS'] ?? '-';
+        obj[column.display] = `${gp}/${gs}`;
+        return;
+      }
       const value = row[column.original];
       
       if (!value || value === '-') {
@@ -155,8 +163,16 @@ function loadCSVToObject(filename: string): { [key: string]: string }[] {
     return obj;
   });
 }
-
-export async function checkPlayerGuess(guess: string, playerFilename: string): Promise<{ correct: boolean; message: string }> {
+export async function getDailyName(difficulty: string) {
+  const dailyData = await getDailyData();
+  const playerFilename = dailyData[0][difficulty.toLowerCase()];
+  const actualPlayerName = playerFilename
+    .replace('.csv', '')
+    .replace(/_\d+$/, '') // Remove ID at end
+    .replace(/_/g, ' ');
+  return actualPlayerName;
+}
+export async function checkPlayerGuess(guess: string, playerFilename: string): Promise<{ correct: boolean; message: string , playerName?: string }> {
   try {
     // Extract player name from filename (remove .csv and ID)
     const actualPlayerName = playerFilename
@@ -169,7 +185,8 @@ export async function checkPlayerGuess(guess: string, playerFilename: string): P
     if (normalizedGuess === normalizedActual) {
       return {
         correct: true,
-        message: `🎉 Correct! It was ${actualPlayerName}!`
+        message: `🎉 Correct! It was ${actualPlayerName}!`,
+        playerName: actualPlayerName // Return the actual player name for display
       };
     } else {
       return {
@@ -228,6 +245,9 @@ export async function getPlayerData(difficulty: string, daily: boolean) {
   }
 
   const csvData = loadCSVToObject(player);
+  if (daily) {
+    player = "NOCHEATING"
+  }
   console.log(`Loaded data for player: ${player}`);
   // Return both the data and the player filename for guess checking
   return {

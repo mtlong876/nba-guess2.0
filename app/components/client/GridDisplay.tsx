@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect,useRef} from 'react';
-import { checkPlayerGuess,checkDailyGuess} from '../../actions/playerActions';
+import { checkPlayerGuess,checkDailyGuess,getDailyName} from '../../actions/playerActions';
 import { on } from 'events';
+import { get } from 'http';
 
 type GridDisplayProps = {
   csvData: { [key: string]: string }[];
@@ -14,17 +15,22 @@ type GridDisplayProps = {
   setMulti: (newMulti: number) => void;
   dailyId: number;
 };
-
+const defaultValues = {
+  points: 200,
+  guesses:3
+}
 export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange,setScore,setMulti,dailyId}: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
-  const [points, setPoints] = useState(100);
+  const [points, setPoints] = useState(defaultValues.points);
   const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
-  const [currentGuessesLeft, setCurrentGuessesLeft] = useState<number>(3); // Replace with actual logic to track guesses left
+  const [currentGuessesLeft, setCurrentGuessesLeft] = useState<number>(defaultValues.guesses); // Replace with actual logic to track guesses left
   const [guess, setGuess] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [correctGuess , setCorrectGuess] = useState(false);
+  const [playerName, setPlayerName] = useState("");
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
+ 
 
 
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
@@ -32,25 +38,29 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   "Season": 50,
   "Team": 75,
   "MIN": 5,
-  "GP": 15,
-  "GS": 10,
+  "GP/GS": 15,
   "PTS": 25,
   "REB": 10,
   "AST": 10,
   "STL": 10,
   "BLK": 10,
-  "TOV": 5,
-  "PF": 5,
+  // "TOV": 5,
+  // "PF": 5,
   "FG%": 5,
   "3P%": 5,
   "FT%": 5
   };
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
   
-
-  useEffect(() => {
-    
-  }, []);
+useEffect(() => {
+  if (status === "completed") {
+    getDailyName(difficulty).then((name) => {
+      console.log("Daily player name:", name);
+      setPlayerName(name); // if you want to display it
+    });
+  }
+}, [status, difficulty]);
+  
 
   useEffect(() => {
     console.log("difficulty changed:", difficulty);
@@ -75,20 +85,20 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         setPoints(parseInt(savedPoints, 10));
       } catch (error) {
         console.error('Error parsing saved points:', error);
-        setPoints(100); // Reset to default if parsing fails
+        setPoints(defaultValues.points); // Reset to default if parsing fails
       }
     } else {
-      setPoints(100); // Reset to default if no saved points
+      setPoints(defaultValues.points); // Reset to default if no saved points
     }
     if (savedGuesses) {
       try {
         setCurrentGuessesLeft(parseInt(savedGuesses, 10));
       } catch (error) {
         console.error('Error parsing saved guesses:', error);
-        setCurrentGuessesLeft(3); // Reset to default if parsing fails
+        setCurrentGuessesLeft(defaultValues.guesses); // Reset to default if parsing fails
       }
     } else {
-      setCurrentGuessesLeft(3); // Reset to default if no saved guesses
+      setCurrentGuessesLeft(defaultValues.guesses); // Reset to default if no saved guesses
     }
     changingDiffculty = null;
   }, [difficulty]);
@@ -230,7 +240,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         Player Stats:
         {(status === "completed" || status === "failed") && (
           <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
-            {playerFilename.replace('.csv', '').replace(/_\d+$/, '').replace(/_/g, ' ')}
+            {playerName}
           </span>
         )}
       </h2>
@@ -253,9 +263,9 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
               localStorage.removeItem(`points_${difficulty}`);
               localStorage.removeItem(`status_${difficulty}`);
               localStorage.removeItem(`guesses_${difficulty}`);
-              setCurrentGuessesLeft(3); // Reset guesses left
+              setCurrentGuessesLeft(defaultValues.guesses); // Reset guesses left
               setVisibleColumns({});
-              setPoints(100);
+              setPoints(defaultValues.points); // Reset points
               setStatus("incomplete");
             }}
             style={{

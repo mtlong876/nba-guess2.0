@@ -79,6 +79,22 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         }
     }else{
         localStorage.setItem('dailyId', dailyId.toString());
+        localStorage.removeItem('multi');
+            localStorage.removeItem('score');
+            difficulties.forEach(diff => {
+                localStorage.removeItem(`status_${diff}`);
+                localStorage.removeItem(`guesses_${diff}`);
+                localStorage.removeItem(`points_${diff}`);
+                localStorage.removeItem(`visibleColumns_${diff}`);
+            });
+            setStatus({
+                easy: "incomplete",
+                medium: "incomplete",
+                hard: "incomplete",
+                chaos: "incomplete",
+                recentP: "incomplete",
+                recentS: "incomplete",
+            });
     }
     }, []);
 
