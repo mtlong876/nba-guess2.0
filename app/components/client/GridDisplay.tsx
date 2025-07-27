@@ -12,9 +12,10 @@ type GridDisplayProps = {
   onStatusChange?: (difficulty: "easy"| "medium"| "hard"| "chaos"| "recentP"| "recentS", status: "incomplete" | "completed" | "failed") => void;
   setScore: (newScore: number) => void;
   setMulti: (newMulti: number) => void;
+  dailyId: number;
 };
 
-export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange,setScore,setMulti}: GridDisplayProps) {
+export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,allPlayerNames, onStatusChange,setScore,setMulti,dailyId}: GridDisplayProps) {
   const [visibleColumns, setVisibleColumns] = useState<{ [key: string]: boolean }>({});
   const [points, setPoints] = useState(100);
   const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
@@ -23,7 +24,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [feedback, setFeedback] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [correctGuess , setCorrectGuess] = useState(false);
-  
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
 
 
@@ -47,23 +47,20 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   };
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
   
-  // useEffect(() => {
-  // if (difficulty != changingDiffculty) {
-  //   return;
-  // }
-  //   if (onStatusChange) {
-  //     onStatusChange(difficulty, status);
-  //   }
-  // }, [status]);
-  
+
+  useEffect(() => {
+    
+  }, []);
+
   useEffect(() => {
     console.log("difficulty changed:", difficulty);
     changingDiffculty = difficulty;
+    
     const savedStatus = localStorage.getItem(`status_${difficulty}`);
-    setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
     const savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
     const savedPoints = localStorage.getItem(`points_${difficulty}`);
     const savedVisible = localStorage.getItem(`visibleColumns_${difficulty}`);
+    setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
     if (savedVisible) {
       try {
         setVisibleColumns(JSON.parse(savedVisible));
