@@ -253,13 +253,6 @@ useEffect(() => {
       <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '18px' }}>
         Points: {points}
       </div>
-      {/* Status display */}
-      {status === "completed" && (
-        <div style={{ color: "#4CAF50", fontWeight: "bold", marginBottom: 8 }}>Completed!</div>
-      )}
-      {status === "failed" && (
-        <div style={{ color: "#ff4444", fontWeight: "bold", marginBottom: 8 }}>Failed!</div>
-      )}
       {/* Reset Progress button */}
       {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
         <div style={{ marginBottom: '10px' }}>
