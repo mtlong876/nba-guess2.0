@@ -63,6 +63,7 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                 localStorage.removeItem('multi');
                 localStorage.removeItem('score');
                 difficulties.forEach(diff => {
+                    localStorage.removeItem(`dailyName_${diff}`);
                     localStorage.removeItem(`status_${diff}`);
                     localStorage.removeItem(`guesses_${diff}`);
                     localStorage.removeItem(`points_${diff}`);

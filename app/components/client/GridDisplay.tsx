@@ -54,10 +54,16 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   
 useEffect(() => {
   if (status === "completed" || status === "failed") {
+    const cachedName = localStorage.getItem(`dailyName_${difficulty}`);
+    if (cachedName) {
+      setPlayerName(cachedName);
+    }else{
     getDailyName(difficulty).then((name) => {
       console.log("Daily player name:", name);
       setPlayerName(name); // if you want to display it
+      localStorage.setItem(`dailyName_${difficulty}`, name);
     });
+  }
   }
 }, [status, difficulty]);
   
