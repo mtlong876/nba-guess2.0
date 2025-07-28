@@ -51,51 +51,51 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
     const totalMulti = Object.values(multi).reduce((sum, val) => sum + val, 0);
     const finalScore = totalScore * totalMulti;
     useEffect(() => {
-    const loadPlayerNames = async () => {
-      const names = await getAllPlayerNames();
-      setAllPlayerNames(names);
-    };
-    loadPlayerNames();
-    const savedDailyId = localStorage.getItem('dailyId');
-    if (savedDailyId) {
-        if (savedDailyId !== dailyId.toString()){
+        const loadPlayerNames = async () => {
+        const names = await getAllPlayerNames();
+        setAllPlayerNames(names);
+        };
+        loadPlayerNames();
+        const savedDailyId = localStorage.getItem('dailyId');
+        if (savedDailyId) {
+            if (savedDailyId !== dailyId.toString()){
+                localStorage.setItem('dailyId', dailyId.toString());
+                localStorage.removeItem('multi');
+                localStorage.removeItem('score');
+                difficulties.forEach(diff => {
+                    localStorage.removeItem(`status_${diff}`);
+                    localStorage.removeItem(`guesses_${diff}`);
+                    localStorage.removeItem(`points_${diff}`);
+                    localStorage.removeItem(`visibleColumns_${diff}`);
+                });
+                setStatus({
+                    easy: "incomplete",
+                    medium: "incomplete",
+                    hard: "incomplete",
+                    chaos: "incomplete",
+                    recentP: "incomplete",
+                    recentS: "incomplete",
+                });
+            }
+        }else{
             localStorage.setItem('dailyId', dailyId.toString());
             localStorage.removeItem('multi');
-            localStorage.removeItem('score');
-            difficulties.forEach(diff => {
-                localStorage.removeItem(`status_${diff}`);
-                localStorage.removeItem(`guesses_${diff}`);
-                localStorage.removeItem(`points_${diff}`);
-                localStorage.removeItem(`visibleColumns_${diff}`);
-            });
-            setStatus({
-                easy: "incomplete",
-                medium: "incomplete",
-                hard: "incomplete",
-                chaos: "incomplete",
-                recentP: "incomplete",
-                recentS: "incomplete",
-            });
+                localStorage.removeItem('score');
+                difficulties.forEach(diff => {
+                    localStorage.removeItem(`status_${diff}`);
+                    localStorage.removeItem(`guesses_${diff}`);
+                    localStorage.removeItem(`points_${diff}`);
+                    localStorage.removeItem(`visibleColumns_${diff}`);
+                });
+                setStatus({
+                    easy: "incomplete",
+                    medium: "incomplete",
+                    hard: "incomplete",
+                    chaos: "incomplete",
+                    recentP: "incomplete",
+                    recentS: "incomplete",
+                });
         }
-    }else{
-        localStorage.setItem('dailyId', dailyId.toString());
-        localStorage.removeItem('multi');
-            localStorage.removeItem('score');
-            difficulties.forEach(diff => {
-                localStorage.removeItem(`status_${diff}`);
-                localStorage.removeItem(`guesses_${diff}`);
-                localStorage.removeItem(`points_${diff}`);
-                localStorage.removeItem(`visibleColumns_${diff}`);
-            });
-            setStatus({
-                easy: "incomplete",
-                medium: "incomplete",
-                hard: "incomplete",
-                chaos: "incomplete",
-                recentP: "incomplete",
-                recentS: "incomplete",
-            });
-    }
     }, []);
 
     

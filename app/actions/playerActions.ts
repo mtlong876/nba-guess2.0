@@ -20,7 +20,8 @@ export async function generateDailyData() {
     const currentTime = Math.floor(Date.now() / 1000);
     let query = `INSERT INTO daily VALUES (${currentTime}`;
     difficulties.forEach(difficulty => {
-        query += `, '${players[difficulty]}'`;
+        const safeValue = players[difficulty].replace(/'/g, "''");
+        query += `, '${safeValue}'`;
     });
     query += ");";
 

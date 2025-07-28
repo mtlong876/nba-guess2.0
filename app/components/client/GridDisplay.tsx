@@ -36,7 +36,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
   const headerPointCost: { [key: string]: number } = {
   "Season": 50,
-  "Team": 75,
+  "Team": 50,
   "MIN": 5,
   "GP/GS": 15,
   "PTS": 25,
@@ -282,12 +282,13 @@ useEffect(() => {
         </div>
       )}
       {/* For demonstration, add buttons to simulate complete/fail */}
-      { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
+      
         <div style={{ marginBottom: 10 }}>
+          { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
           <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
+          )}
           <button onClick={handleFail}>Give up</button>
         </div>
-      )}
       {/* Table */}
       {csvData.length > 0 ? (
         <table style={{ 
