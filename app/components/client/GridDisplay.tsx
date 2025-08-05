@@ -168,11 +168,11 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     toggleAllColumns(); // Show all columns on complete
     switch (currentGuessesLeft) {
       case 3:{
-        setMulti(2);
+        setMulti(3);
         break;
       }
       case 2:{
-        setMulti(1.5);
+        setMulti(2);
         break;
       }
       case 1:{
@@ -203,7 +203,18 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       handleGuess();
     }
   };
-
+  function skipGuess() {
+    setGuess('');
+    setCurrentGuessesLeft(prev => prev - 1);
+    localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+    if (currentGuessesLeft - 1 <= 0) {
+      handleFail();
+      setFeedback('No guesses remaining! Please try again tomorrow.');
+    }
+    if (currentGuessesLeft - 1 == 1)  {
+      localInitials(difficulty);
+    }
+  }
   const handleGuess = async () => {
       if (guess.trim() === '') {
         setFeedback('Please enter a guess!');
@@ -439,6 +450,21 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
                   : 'Guess'
             }
           </button>
+          <button
+            onClick={skipGuess}
+            disabled={isInputDisabled || currentGuessesLeft <= 0}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#ffa500',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isInputDisabled || currentGuessesLeft <= 0 ? 'not-allowed' : 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Skip
+        </button>
         </div>
         
         {feedback && (

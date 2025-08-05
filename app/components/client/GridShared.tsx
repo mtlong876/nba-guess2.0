@@ -121,9 +121,12 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         }
     }, [status]);
     
-    const shareString = "Nba-guess: " + Math.floor((dailyId-1753282834)/86400) + " " + difficulties.map(diff =>
-        status[diff] === "completed" ? "✅" : "❌"
-        ).join("") + " Score: " + finalScore + " https://NBA-Guess.com";
+    const shareString = "Nba-guess: " + Math.floor((dailyId-1753282834)/86400) + " " + difficulties.map(diff => {
+        if (multi[diff] === 3) return "🥇"; // gold
+        if (multi[diff] === 2) return "🥈"; // silver
+        if (multi[diff] === 1) return "🥉"; // bronze
+        return "❌"; // red cross
+    }).join("") + " https://NBA-Guess.com";
 
     useEffect(() => {
         if (!didMount.current) {
