@@ -170,9 +170,6 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
 
     return (
         <div>
-            <div style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '16px' }}>
-                Total Score: {totalScore} x Multi: {totalMulti} = Final Score: {finalScore}
-            </div>
             {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
                 <button
                 onClick={() => {

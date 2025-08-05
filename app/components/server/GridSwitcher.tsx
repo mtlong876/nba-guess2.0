@@ -48,7 +48,7 @@ export default async function GridSwitcher() {
 				table.difficulty,
 				table.daily
 			);
-			return { csvData, playerFilename };
+			return { csvData: [...csvData].reverse(), playerFilename };
 		})
 	);
 	//console.log('All player data loaded:', allPlayerData);

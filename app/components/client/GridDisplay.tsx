@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect,useRef} from 'react';
-import { checkPlayerGuess,checkDailyGuess,getDailyName} from '../../actions/playerActions';
+import { checkPlayerGuess,checkDailyGuess,getDailyName,getDailyInitials} from '../../actions/playerActions';
 import { on } from 'events';
 import { get } from 'http';
 
@@ -29,8 +29,8 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [isChecking, setIsChecking] = useState(false);
   const [correctGuess , setCorrectGuess] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [playerInitials, setPlayerInitials] = useState("");
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
- 
 
 
   const getPointCost = (header: string) => headerPointCost[header] ?? 10;
@@ -51,21 +51,34 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   "FT%": 5
   };
   let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
-  
-useEffect(() => {
-  if (status === "completed" || status === "failed") {
-    const cachedName = localStorage.getItem(`dailyName_${difficulty}`);
-    if (cachedName) {
-      setPlayerName(cachedName);
+
+  function localInitials(difficulty:string) {
+    const cachedInitials = localStorage.getItem(`dailyInitials_${difficulty}`);
+    if (cachedInitials) {
+      setPlayerInitials(cachedInitials);
+      return cachedInitials;
     }else{
-    getDailyName(difficulty).then((name) => {
-      console.log("Daily player name:", name);
-      setPlayerName(name); // if you want to display it
-      localStorage.setItem(`dailyName_${difficulty}`, name);
-    });
+      getDailyInitials(difficulty).then((initials) => {
+        setPlayerInitials(initials);
+        localStorage.setItem(`dailyInitials_${difficulty}`, initials);
+        return initials;
+      });
+    }
   }
-  }
-}, [status, difficulty]);
+
+  useEffect(() => {
+    if (status === "completed" || status === "failed") {
+      const cachedName = localStorage.getItem(`dailyName_${difficulty}`);
+      if (cachedName) {
+        setPlayerName(cachedName);
+      }else{
+      getDailyName(difficulty).then((name) => {
+        setPlayerName(name); // if you want to display it
+        localStorage.setItem(`dailyName_${difficulty}`, name);
+      });
+    }
+    }
+  }, [status, difficulty]);
   
 
   useEffect(() => {
@@ -99,6 +112,9 @@ useEffect(() => {
     if (savedGuesses) {
       try {
         setCurrentGuessesLeft(parseInt(savedGuesses, 10));
+        if (parseInt(savedGuesses, 10) == 1) {
+          localInitials(difficulty);
+        }
       } catch (error) {
         console.error('Error parsing saved guesses:', error);
         setCurrentGuessesLeft(defaultValues.guesses); // Reset to default if parsing fails
@@ -122,12 +138,6 @@ useEffect(() => {
     localStorage.setItem(`visibleColumns_${difficulty}`, JSON.stringify(visibleColumns));
     localStorage.setItem(`points_${difficulty}`, points.toString());
     localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
-    // console.log(`Progress saved for ${difficulty}:`, {
-    //   status,
-    //   visibleColumns,
-    //   points,
-    //   currentGuessesLeft
-    // });
   }
 
   const toggleAllColumns = () => {
@@ -215,7 +225,6 @@ useEffect(() => {
           setFeedback(result.message);
         }else{
           result = await checkDailyGuess(guess, difficulty);
-          console.log("Daily guess result:", result);
           setFeedback(result.message);
         }
         if (result.correct) {
@@ -232,6 +241,9 @@ useEffect(() => {
             handleFail();
             setFeedback('No guesses remaining! Please try again tomorrow.');
           }
+          if (currentGuessesLeft - 1 == 1)  {
+            localInitials(difficulty);
+          }
         }
       } catch (error) {
         setFeedback('Error checking guess. Please try again.');
@@ -239,7 +251,6 @@ useEffect(() => {
         setIsChecking(false);
       }
     };
-
   return (
     <div>
       <h2>
@@ -249,10 +260,13 @@ useEffect(() => {
             {playerName}
           </span>
         )}
+        {(currentGuessesLeft === 1) && (
+          <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
+            {playerInitials|| "Loading..."}
+          </span>
+        )
+        }
       </h2>
-      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '18px' }}>
-        Points: {points}
-      </div>
       {/* Reset Progress button */}
       {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
         <div style={{ marginBottom: '10px' }}>
@@ -295,65 +309,6 @@ useEffect(() => {
           width: '100%',
           tableLayout: 'fixed'
         }}>
-          <thead>
-            {/* Point cost row */}
-            <tr>
-              {headers.map((header) => (
-                <th
-                  key={`cost-${header}`}
-                  style={{
-                    border: '1px solid #ddd',
-                    padding: '4px',
-                    textAlign: 'center',
-                    backgroundColor: '#fffbe6',
-                    fontWeight: 'normal',
-                    fontSize: '12px'
-                  }}
-                >
-                  Cost: {getPointCost(header)}
-                </th>
-              ))}
-            </tr>
-            {/* Button row */}
-            <tr>
-              {headers.map((header) => (
-                <th 
-                  key={`btn-${header}`}
-                  style={{ 
-                    border: '1px solid #ddd', 
-                    padding: '4px',
-                    textAlign: 'center',
-                    backgroundColor: '#f9f9f9',
-                    width: `${100 / headers.length}%`
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      toggleColumn(header);
-                    }}
-                    disabled={visibleColumns[header] || status !== "incomplete"}
-                    style={{
-                      padding: '4px 8px',
-                      backgroundColor: visibleColumns[header] 
-                        ? '#4CAF50' 
-                        : '#e0e0e0',
-                      color: visibleColumns[header] 
-                        ? 'white' 
-                        : 'black',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: visibleColumns[header] ? 'not-allowed' : 'pointer',
-                      fontSize: '11px',
-                      opacity: visibleColumns[header] ? 0.6 : 1,
-                      width: '100%'
-                    }}
-                  >
-                    {visibleColumns[header] ? '👁️' : '🚫'}
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
           <tbody>
             {/* Header row - now second */}
             <tr>
@@ -376,7 +331,10 @@ useEffect(() => {
               ))}
             </tr>
             {/* Data rows */}
-            {csvData.map((row, index) => (
+            {(currentGuessesLeft === 3
+              ? csvData.slice(0, 1) // Only first row if guesses left is 3
+              : csvData
+            ).map((row, index) => (
             <tr key={index}>
               {headers.map((header) => (
                 <td
@@ -390,7 +348,7 @@ useEffect(() => {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {visibleColumns[header] ? row[header] : "‎"}
+                  {header != "Team" || currentGuessesLeft<2 ? row[header] : "???"}
                 </td>
               ))}
             </tr>
