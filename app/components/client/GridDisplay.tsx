@@ -26,8 +26,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [playerInitials, setPlayerInitials] = useState("");
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
 
-  let changingDiffculty: "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS" | null = difficulty;
-
   function localInitials(difficulty:string) {
     const cachedInitials = localStorage.getItem(`dailyInitials_${difficulty}`);
     if (cachedInitials) {
@@ -59,7 +57,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
 
   useEffect(() => {
     console.log("difficulty changed:", difficulty);
-    changingDiffculty = difficulty;
     
     const savedStatus = localStorage.getItem(`status_${difficulty}`);
     const savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
@@ -77,26 +74,12 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
     } else {
       setCurrentGuessesLeft(defaultValues.guesses); // Reset to default if no saved guesses
     }
-    changingDiffculty = null;
   }, [difficulty]);
-
-
-  useEffect(() => {
-    if (difficulty != changingDiffculty) {
-      return;
-    }
-    saveProgress();
-  },[status,currentGuessesLeft]);
-
-  const saveProgress = () => {
-    localStorage.setItem(`status_${difficulty}`, status);
-    localStorage.setItem(`guesses_${difficulty}`, currentGuessesLeft.toString());
-  }
-
  
   const handleComplete = () => {
     setCorrectGuess(true);
     setStatus("completed");
+    localStorage.setItem(`status_${difficulty}`, "completed");
     onStatusChange?.(difficulty, "completed");
     switch (currentGuessesLeft) {
       case 3:{
@@ -113,13 +96,16 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       }
     }
     setCurrentGuessesLeft(0); // Reset guesses left
+    localStorage.setItem(`guesses_${difficulty}`, "0");
   };
 
   // Example: Call this when the user runs out of guesses
   const handleFail = () => {
     setStatus("failed");
+    localStorage.setItem(`status_${difficulty}`, "failed");
     onStatusChange?.(difficulty, "failed");
     setCurrentGuessesLeft(0);
+    localStorage.setItem(`guesses_${difficulty}`, "0");
   };
 
 
