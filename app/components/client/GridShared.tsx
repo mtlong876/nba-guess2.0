@@ -31,7 +31,7 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         recentP: "incomplete",
         recentS: "incomplete",
     });
-    const [score, setScore] = useState<Record<Difficulty, number>>({
+    const [guessed, setGuessed] = useState<Record<Difficulty, number>>({
         easy: 0,
         medium: 0,
         hard: 0,
@@ -39,17 +39,6 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         recentP: 0,
         recentS: 0,
     });
-    const [multi, setMulti] = useState<Record<Difficulty, number>>({
-        easy: 0,
-        medium: 0,
-        hard: 0,
-        chaos: 0,
-        recentP: 0,
-        recentS: 0,
-    });
-    const totalScore = Object.values(score).reduce((sum, val) => sum + val, 0);
-    const totalMulti = Object.values(multi).reduce((sum, val) => sum + val, 0);
-    const finalScore = totalScore * totalMulti;
     useEffect(() => {
         const loadPlayerNames = async () => {
         const names = await getAllPlayerNames();
@@ -60,15 +49,12 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         if (savedDailyId) {
             if (savedDailyId !== dailyId.toString()){
                 localStorage.setItem('dailyId', dailyId.toString());
-                localStorage.removeItem('multi');
-                localStorage.removeItem('score');
+                localStorage.removeItem('guessed');
                 difficulties.forEach(diff => {
                     localStorage.removeItem(`dailyInitials_${diff}`);
                     localStorage.removeItem(`dailyName_${diff}`);
                     localStorage.removeItem(`status_${diff}`);
                     localStorage.removeItem(`guesses_${diff}`);
-                    localStorage.removeItem(`points_${diff}`);
-                    localStorage.removeItem(`visibleColumns_${diff}`);
                 });
                 setStatus({
                     easy: "incomplete",
@@ -81,13 +67,10 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
             }
         }else{
             localStorage.setItem('dailyId', dailyId.toString());
-            localStorage.removeItem('multi');
-                localStorage.removeItem('score');
+            localStorage.removeItem('guessed');
                 difficulties.forEach(diff => {
                     localStorage.removeItem(`status_${diff}`);
                     localStorage.removeItem(`guesses_${diff}`);
-                    localStorage.removeItem(`points_${diff}`);
-                    localStorage.removeItem(`visibleColumns_${diff}`);
                 });
                 setStatus({
                     easy: "incomplete",
@@ -123,9 +106,9 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
     }, [status]);
     
     const shareString = "Nba-guess: " + Math.floor((dailyId-1753282834)/86400) + " " + difficulties.map(diff => {
-        if (multi[diff] === 3) return "🥇"; // gold
-        if (multi[diff] === 2) return "🥈"; // silver
-        if (multi[diff] === 1) return "🥉"; // bronze
+        if (guessed[diff] === 3) return "🥇"; // gold
+        if (guessed[diff] === 2) return "🥈"; // silver
+        if (guessed[diff] === 1) return "🥉"; // bronze
         return "❌"; // red cross
     }).join("") + " https://NBA-Guess.com";
 
@@ -134,9 +117,8 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
             didMount.current = true;
             return;
         }
-        localStorage.setItem('score', JSON.stringify(score));
-        localStorage.setItem('multi', JSON.stringify(multi));
-    }, [score,multi]);
+        localStorage.setItem('guessed', JSON.stringify(guessed));
+    }, [guessed]);
 
     useEffect(() => {
         if (loadedRef.current) return;
@@ -154,15 +136,10 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                 }
             }
         });
-        const storedScore = localStorage.getItem('score');
-        if (storedScore) {
-            const parsedScore = JSON.parse(storedScore);
-            setScore(prev => ({ ...prev, ...parsedScore }));
-        }
-        const storedMulti = localStorage.getItem('multi');
-        if (storedMulti) {
-            const parsedMulti = JSON.parse(storedMulti);
-            setMulti(prev => ({ ...prev, ...parsedMulti }));
+        const storedGuessed = localStorage.getItem('guessed');
+        if (storedGuessed) {
+            const parsedGuessed = JSON.parse(storedGuessed);
+            setGuessed(prev => ({ ...prev, ...parsedGuessed }));
         }
         if (changed) {
             setStatus(loadedStatus);
@@ -177,7 +154,7 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
             {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
                 <button
                 onClick={() => {
-                    setScore({
+                    setGuessed({
                         easy: 0,
                         medium: 0,
                         hard: 0,
@@ -185,16 +162,7 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                         recentP: 0,
                         recentS: 0,
                     });
-                    setMulti({
-                        easy: 0,
-                        medium: 0,
-                        hard: 0,
-                        chaos: 0,
-                        recentP: 0,
-                        recentS: 0,
-                    });
-                    localStorage.removeItem('score');
-                    localStorage.removeItem('multi');
+                    localStorage.removeItem('guessed');
                 }}
                 style={{
                     marginBottom: '16px',
@@ -207,7 +175,7 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                     fontSize: '16px'
                 }}
                 >
-                    Reset Score & Multiplier
+                    Reset Guessed
                 </button>
             )}
             <GridSwitcherClient
@@ -223,16 +191,10 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                         daily={table.daily}
                         allPlayerNames={allPlayerNames}
                         onStatusChange={handleStatusChange}
-                        setScore={(newScore) =>
-                            setScore(prev => ({
+                        setGuessed={(newGuessed) =>
+                            setGuessed(prev => ({
                             ...prev,
-                            [table.difficulty as Difficulty]: newScore
-                            }))
-                        }
-                        setMulti={(newMulti) =>
-                            setMulti(prev => ({
-                            ...prev,
-                            [table.difficulty as Difficulty]: newMulti
+                            [table.difficulty as Difficulty]: newGuessed
                             }))
                         }
                         dailyId={dailyId}
