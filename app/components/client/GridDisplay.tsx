@@ -123,7 +123,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   };
 
 
-  const isCurrentPlayerGuessed = correctGuess; // Replace with actual logic to check if the current player is guessed
+  const isCurrentPlayerGuessed = status == "completed"; // Replace with actual logic to check if the current player is guessed
   const isInputDisabled = status != "incomplete" // Disable input if player is guessed or no guesses left
   
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -237,7 +237,18 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
           { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
           <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
           )}
-          <button onClick={handleFail}>Give up</button>
+          <button 
+          onClick={handleFail}
+          disabled={isInputDisabled}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#ff4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isInputDisabled ? 'not-allowed' : 'pointer',
+            fontSize: '16px'
+          }}>Give up</button>
         </div>
       {/* Table */}
       {csvData.length > 0 ? (
