@@ -151,6 +151,13 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
 
     return (
         <div>
+            <div style={{ marginBottom: '20px' }}>
+            {allCompleteOrFailed && (
+                <button onClick={() => setShowPopup(true)}>
+                    Show Popup
+                </button>
+            )}
+            </div>
             {process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
                 <button
                 onClick={() => {
@@ -201,11 +208,6 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                     />
                 ))}
             </GridSwitcherClient>
-            {allCompleteOrFailed && (
-                <button onClick={() => setShowPopup(true)}>
-                    Show Popup
-                </button>
-            )}
             {showPopup && (
                 <div
                     style={{
@@ -214,13 +216,14 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         background: 'white',
-                        border: '1px solid #ccc',
+                        border: '1px solid #000000ff',
                         borderRadius: '8px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                         padding: '24px',
                         zIndex: 1000,
                         minWidth: '300px',
-                        minHeight: '150px'
+                        minHeight: '150px',
+                        backgroundColor: '#ffd29fff',
                     }}
                 >
                     {/* Close button as red X in top right */}

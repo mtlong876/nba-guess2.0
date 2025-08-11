@@ -181,7 +181,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   return (
     <div>
       <h2>
-        Player Stats:
+        Player Name:
         {(status === "completed" || status === "failed") && (
           <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
             {playerName}
@@ -219,23 +219,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       )}
       {/* For demonstration, add buttons to simulate complete/fail */}
       
-        <div style={{ marginBottom: 10 }}>
-          { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
-          <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
-          )}
-          <button 
-          onClick={handleFail}
-          disabled={isInputDisabled}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#ff4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isInputDisabled ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
-          }}>Give up</button>
-        </div>
+        
       {/* Table */}
       {csvData.length > 0 ? (
         <table style={{ 
@@ -250,7 +234,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
                 <td 
                   key={header}
                   style={{ 
-                    border: '1px solid #ddd', 
+                    border: '1px solid #000000ff', 
                     padding: '8px', 
                     backgroundColor: '#f2f2f2',
                     fontWeight: 'bold',
@@ -271,7 +255,8 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
                 <td
                   key={header}
                   style={{
-                    border: '1px solid #ddd',
+                    border: '1px solid #000000ff',
+                    backgroundColor: '#ffd29fff',
                     padding: '8px',
                     textAlign: 'center',
                     overflow: 'hidden',
@@ -290,7 +275,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         <p>No data available</p>
       )}
 
-      <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+      <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffd29fff', borderRadius: '8px' }}>
         <h3>
           Guess the Player
           {isCurrentPlayerGuessed && (
@@ -385,8 +370,22 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
           >
             Skip
         </button>
+        { process.env.NEXT_PUBLIC_DEV_MODE == "ON" && (
+          <button onClick={handleComplete} style={{ marginRight: 8 }}>Simulate Complete</button>
+          )}
+          <button 
+          onClick={handleFail}
+          disabled={isInputDisabled}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#ff4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isInputDisabled ? 'not-allowed' : 'pointer',
+            fontSize: '16px'
+          }}>Give up</button>
         </div>
-        
         {feedback && (
           <div style={{ 
             marginTop: '10px', 

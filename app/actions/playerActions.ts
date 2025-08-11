@@ -180,7 +180,7 @@ export async function getDailyInitials(difficulty: string) {
     if (parts.length < 2) {
         return name.charAt(0).toUpperCase(); // Return first letter if no last name
     }
-    const initials: string = parts.map((part: string) => part.charAt(0).toUpperCase()).join('');
+    const initials: string = parts.map((part: string) => part.charAt(0).toUpperCase()).join(' ');
     return initials;
 }
 export async function checkPlayerGuess(guess: string, playerFilename: string): Promise<{ correct: boolean; message: string , playerName?: string }> {

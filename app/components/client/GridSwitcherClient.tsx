@@ -18,7 +18,8 @@ export default function GridSwitcherClient({ tables, children ,status}: GridSwit
   const difficultiesArray = ["easy", "medium", "hard", "chaos", "recentP", "recentS"];
   return (
     <div>
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px',
+       }}>
         {tables.map((table, index) => {
           const isSolved = status[difficultiesArray[index] as keyof typeof status] === "completed";
           const isFailed = status[difficultiesArray[index] as keyof typeof status] === "failed";
@@ -30,11 +31,11 @@ export default function GridSwitcherClient({ tables, children ,status}: GridSwit
                 setSelected(index);
               }}
               style={{
-                margin: '0 8px',
+                marginRight: '10px',
                 padding: '8px 16px',
                 backgroundColor: selected === index ? '#4CAF50' : '#f0f0f0',
                 color: selected === index ? 'white' : 'black',
-                border: '1px solid #ddd',
+                border: '1px solid #000000ff',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 position: 'relative'
