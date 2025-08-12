@@ -25,41 +25,66 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [playerName, setPlayerName] = useState("");
   const [playerInitials, setPlayerInitials] = useState("");
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
-
+  
   function localInitials(difficulty:string) {
-    const cachedInitials = localStorage.getItem(`dailyInitials_${difficulty}`);
-    if (cachedInitials) {
-      setPlayerInitials(cachedInitials);
-      return cachedInitials;
+    if (daily){
+      const cachedInitials = localStorage.getItem(`dailyInitials_${difficulty}`);
+      if (cachedInitials) {
+        setPlayerInitials(cachedInitials);
+        return cachedInitials;
+      }else{
+        getDailyInitials(difficulty).then((initials) => {
+          setPlayerInitials(initials);
+          localStorage.setItem(`dailyInitials_${difficulty}`, initials);
+          return initials;
+        });
+      }
     }else{
-      getDailyInitials(difficulty).then((initials) => {
-        setPlayerInitials(initials);
-        localStorage.setItem(`dailyInitials_${difficulty}`, initials);
-        return initials;
-      });
+      const parts = playerFilename.split('_').slice(0,-1);
+      if (parts.length < 2) {
+        setPlayerInitials(playerFilename.charAt(0).toUpperCase());
+        return playerFilename.charAt(0).toUpperCase();
+      }
+      const initials: string = parts.map((part: string) => part.charAt(0).toUpperCase()).join(' ');
+      setPlayerInitials(initials);
+      return initials;
     }
   }
 
   useEffect(() => {
     if (status === "completed" || status === "failed") {
-      const cachedName = localStorage.getItem(`dailyName_${difficulty}`);
-      if (cachedName) {
-        setPlayerName(cachedName);
-      }else{
-      getDailyName(difficulty).then((name) => {
-        setPlayerName(name); // if you want to display it
-        localStorage.setItem(`dailyName_${difficulty}`, name);
-      });
+      if (daily){
+        const cachedName = localStorage.getItem(`dailyName_${difficulty}`);
+        if (cachedName) {
+          setPlayerName(cachedName);
+        }else{
+        getDailyName(difficulty).then((name) => {
+          setPlayerName(name); // if you want to display it
+          localStorage.setItem(`dailyName_${difficulty}`, name);
+        });
+      }
+    }else{
+      const actualPlayerName = playerFilename
+        .replace('.csv', '')
+        .replace(/_\d+$/, '') // Remove ID at end
+        .replace(/_/g, ' ');
+      setPlayerName(actualPlayerName);
     }
-    }
+  }
   }, [status, difficulty]);
   
 
   useEffect(() => {
     console.log("difficulty changed:", difficulty);
-    
-    const savedStatus = localStorage.getItem(`status_${difficulty}`);
-    const savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
+    let savedStatus: string | null;
+    let savedGuesses: string | null;
+    if(daily){
+      savedStatus = localStorage.getItem(`status_${difficulty}`);
+      savedGuesses = localStorage.getItem(`guesses_${difficulty}`);
+    }else{
+      savedStatus = localStorage.getItem(`random_status_${difficulty}`);
+      savedGuesses = localStorage.getItem(`random_guesses_${difficulty}`);
+    }
     setStatus((savedStatus as "completed" | "failed" | null) || "incomplete");
     if (savedGuesses) {
       try {
@@ -79,7 +104,6 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const handleComplete = () => {
     setCorrectGuess(true);
     setStatus("completed");
-    localStorage.setItem(`status_${difficulty}`, "completed");
     onStatusChange?.(difficulty, "completed");
     switch (currentGuessesLeft) {
       case 3:{
@@ -96,16 +120,28 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       }
     }
     setCurrentGuessesLeft(0); // Reset guesses left
-    localStorage.setItem(`guesses_${difficulty}`, "0");
+    if (daily) {
+      localStorage.setItem(`status_${difficulty}`, "completed");
+      localStorage.setItem(`guesses_${difficulty}`, "0");
+    }else {
+      localStorage.setItem(`random_status_${difficulty}`, "completed");
+      localStorage.setItem(`random_guesses_${difficulty}`, "0");
+    }
   };
 
   // Example: Call this when the user runs out of guesses
   const handleFail = () => {
     setStatus("failed");
-    localStorage.setItem(`status_${difficulty}`, "failed");
     onStatusChange?.(difficulty, "failed");
     setCurrentGuessesLeft(0);
-    localStorage.setItem(`guesses_${difficulty}`, "0");
+    if (daily) {
+      localStorage.setItem(`status_${difficulty}`, "failed");
+      localStorage.setItem(`guesses_${difficulty}`, "0");
+    }
+    else {
+      localStorage.setItem(`random_status_${difficulty}`, "failed");
+      localStorage.setItem(`random_guesses_${difficulty}`, "0");
+    }
   };
 
 
@@ -122,7 +158,12 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   function skipGuess() {
     setGuess('');
     setCurrentGuessesLeft(prev => prev - 1);
-    localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+    if (daily) {
+      localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+    }
+    else {
+      localStorage.setItem(`random_guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+    }
     if (currentGuessesLeft - 1 <= 0) {
       handleFail();
       setFeedback('No guesses remaining! Please try again tomorrow.');
@@ -163,7 +204,11 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         } else {
           setGuess('');
           setCurrentGuessesLeft(prev => prev - 1);
-          localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+          if (daily) {
+            localStorage.setItem(`guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+          } else {
+            localStorage.setItem(`random_guesses_${difficulty}`, (currentGuessesLeft - 1).toString());
+          }
           if (currentGuessesLeft - 1 <= 0) {
             handleFail();
             setFeedback('No guesses remaining! Please try again tomorrow.');
@@ -183,12 +228,12 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
       <h2>
         Player Name:
         {(status === "completed" || status === "failed") && (
-          <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
+          <span style={{ marginLeft: 12, color: "#000000ff", fontWeight: "bold" }}>
             {playerName}
           </span>
         )}
         {(currentGuessesLeft === 1) && (
-          <span style={{ marginLeft: 12, color: "#4CAF50", fontWeight: "bold" }}>
+          <span style={{ marginLeft: 12, color: "#000000ff", fontWeight: "bold" }}>
             {playerInitials|| "Loading..."}
           </span>
         )
@@ -275,7 +320,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
         <p>No data available</p>
       )}
 
-      <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffd29fff', borderRadius: '8px' }}>
+      <div style={{ marginTop: '10px', padding: '5px', backgroundColor: '#ffd29fff', borderRadius: '8px' }}>
         <h3>
           Guess the Player
           {isCurrentPlayerGuessed && (
@@ -290,7 +335,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
             </span>
           )}
         </h3>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' ,padding: '0 0 10px 0'}}>
           <input
             type="text"
             value={guess}

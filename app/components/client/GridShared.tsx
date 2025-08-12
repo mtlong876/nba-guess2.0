@@ -11,6 +11,7 @@ type GridSharedProps = {
     tables: any[];
     allPlayerData: any[];
     dailyId: number; // or string, depending on your data
+    daily?: boolean; // optional prop to indicate if it's a daily grid
 };
 type Difficulty = "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS";
 type Status = "incomplete" | "completed" | "failed";
@@ -18,7 +19,7 @@ const difficulties: Difficulty[] = [
   "easy", "medium", "hard", "chaos", "recentP", "recentS"
 ];
 
-export default function GridShared({tables, allPlayerData,dailyId}: GridSharedProps) {
+export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSharedProps) {
     const [showPopup, setShowPopup] = useState(false);
     const didMount = useRef(false);
     const [allCompleteOrFailed, setAllCompleteOrFailed] = useState(false);
@@ -39,47 +40,63 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
         recentP: 0,
         recentS: 0,
     });
+
     useEffect(() => {
         const loadPlayerNames = async () => {
         const names = await getAllPlayerNames();
         setAllPlayerNames(names);
         };
         loadPlayerNames();
-        const savedDailyId = localStorage.getItem('dailyId');
-        if (savedDailyId) {
-            if (savedDailyId !== dailyId.toString()){
+        if (daily) {
+            const savedDailyId = localStorage.getItem('dailyId');
+            if (savedDailyId) {
+                if (savedDailyId !== dailyId.toString()){
+                    localStorage.setItem('dailyId', dailyId.toString());
+                    localStorage.removeItem('guessed');
+                    difficulties.forEach(diff => {
+                        localStorage.removeItem(`dailyInitials_${diff}`);
+                        localStorage.removeItem(`dailyName_${diff}`);
+                        localStorage.removeItem(`status_${diff}`);
+                        localStorage.removeItem(`guesses_${diff}`);
+                    });
+                    setStatus({
+                        easy: "incomplete",
+                        medium: "incomplete",
+                        hard: "incomplete",
+                        chaos: "incomplete",
+                        recentP: "incomplete",
+                        recentS: "incomplete",
+                    });
+                }
+            }else{
                 localStorage.setItem('dailyId', dailyId.toString());
                 localStorage.removeItem('guessed');
-                difficulties.forEach(diff => {
-                    localStorage.removeItem(`dailyInitials_${diff}`);
-                    localStorage.removeItem(`dailyName_${diff}`);
-                    localStorage.removeItem(`status_${diff}`);
-                    localStorage.removeItem(`guesses_${diff}`);
-                });
-                setStatus({
-                    easy: "incomplete",
-                    medium: "incomplete",
-                    hard: "incomplete",
-                    chaos: "incomplete",
-                    recentP: "incomplete",
-                    recentS: "incomplete",
-                });
+                    difficulties.forEach(diff => {
+                        localStorage.removeItem(`status_${diff}`);
+                        localStorage.removeItem(`guesses_${diff}`);
+                    });
+                    setStatus({
+                        easy: "incomplete",
+                        medium: "incomplete",
+                        hard: "incomplete",
+                        chaos: "incomplete",
+                        recentP: "incomplete",
+                        recentS: "incomplete",
+                    });
             }
         }else{
-            localStorage.setItem('dailyId', dailyId.toString());
-            localStorage.removeItem('guessed');
-                difficulties.forEach(diff => {
-                    localStorage.removeItem(`status_${diff}`);
-                    localStorage.removeItem(`guesses_${diff}`);
-                });
-                setStatus({
-                    easy: "incomplete",
-                    medium: "incomplete",
-                    hard: "incomplete",
-                    chaos: "incomplete",
-                    recentP: "incomplete",
-                    recentS: "incomplete",
-                });
+            difficulties.forEach(diff => {
+                localStorage.removeItem(`random_status_${diff}`);
+                localStorage.removeItem(`random_guesses_${diff}`);
+            });
+            setStatus({
+                        easy: "incomplete",
+                        medium: "incomplete",
+                        hard: "incomplete",
+                        chaos: "incomplete",
+                        recentP: "incomplete",
+                        recentS: "incomplete",
+            });
         }
     }, []);
 
@@ -104,45 +121,57 @@ export default function GridShared({tables, allPlayerData,dailyId}: GridSharedPr
             setShowPopup(true);
         }
     }, [status]);
-    
-    const shareString = "Nba-guess: " + Math.floor((dailyId-1753282834)/86400) + " " + difficulties.map(diff => {
-        if (guessed[diff] === 3) return "🥇"; // gold
-        if (guessed[diff] === 2) return "🥈"; // silver
-        if (guessed[diff] === 1) return "🥉"; // bronze
-        return "❌"; // red cross
-    }).join("") + " https://NBA-Guess.com";
+    let shareString = "";
+    if (daily){
+        shareString = "Nba-guess: " + Math.floor((dailyId-1753282834)/86400) + " " + difficulties.map(diff => {
+            if (guessed[diff] === 3) return "🥇"; // gold
+            if (guessed[diff] === 2) return "🥈"; // silver
+            if (guessed[diff] === 1) return "🥉"; // bronze
+            return "❌"; // red cross
+        }).join("") + " https://NBA-Guess.com";
+    }else{
+        shareString = "Nba-guess: " + difficulties.map(diff => {
+            if (guessed[diff] === 3) return "🥇"; // gold
+            if (guessed[diff] === 2) return "🥈"; // silver
+            if (guessed[diff] === 1) return "🥉"; // bronze
+            return "❌"; // red cross
+        }).join("") + " https://NBA-Guess.com";
+    }
 
     useEffect(() => {
         if (!didMount.current) {
             didMount.current = true;
             return;
         }
-        localStorage.setItem('guessed', JSON.stringify(guessed));
+        if (daily) {
+            localStorage.setItem('guessed', JSON.stringify(guessed));
+        }
     }, [guessed]);
 
     useEffect(() => {
         if (loadedRef.current) return;
         loadedRef.current = true;
-
-        const loadedStatus: Record<Difficulty, Status> = { ...status };
-        let changed = false;
-        difficulties.forEach((diff) => {
-            const stored = localStorage.getItem(`status_${diff}`);
-            if (stored === "completed" || stored === "failed" || stored === "incomplete") {
-                console.log(`Loaded status for ${diff}:`, stored);
-                if (loadedStatus[diff] !== stored) {
-                    loadedStatus[diff] = stored;
-                    changed = true;
+        if(daily) {
+            const loadedStatus: Record<Difficulty, Status> = { ...status };
+            let changed = false;
+            difficulties.forEach((diff) => {
+                const stored = localStorage.getItem(`status_${diff}`);
+                if (stored === "completed" || stored === "failed" || stored === "incomplete") {
+                    console.log(`Loaded status for ${diff}:`, stored);
+                    if (loadedStatus[diff] !== stored) {
+                        loadedStatus[diff] = stored;
+                        changed = true;
+                    }
                 }
+            });
+            const storedGuessed = localStorage.getItem('guessed');
+            if (storedGuessed) {
+                const parsedGuessed = JSON.parse(storedGuessed);
+                setGuessed(prev => ({ ...prev, ...parsedGuessed }));
             }
-        });
-        const storedGuessed = localStorage.getItem('guessed');
-        if (storedGuessed) {
-            const parsedGuessed = JSON.parse(storedGuessed);
-            setGuessed(prev => ({ ...prev, ...parsedGuessed }));
-        }
-        if (changed) {
-            setStatus(loadedStatus);
+            if (changed) {
+                setStatus(loadedStatus);
+            }
         }
         setStatusLoaded(true);
     }, []);

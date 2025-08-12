@@ -1,7 +1,7 @@
-import GridShared from '../client/GridShared';
-import { getPlayerData,getDailyId } from '../../actions/playerActions';
+import GridShared from '../../../components/client/GridShared';
+import { getPlayerData,getDailyId } from '../../../actions/playerActions';
 import { revalidateTag } from 'next/cache'
-import TopBar from '../client/TopBar';
+import TopBar from '../../../components/client/TopBar';
 export const dynamic = "force-dynamic";
 
 type Difficulty = "easy" | "medium" | "hard" | "chaos" | "recentP" | "recentS";
@@ -10,32 +10,32 @@ const tables: { title: string; difficulty: Difficulty; daily: boolean }[] = [
 	{
 		title: 'Easy',
 		difficulty: 'easy',
-		daily: true,
+		daily: false,
 	},
 	{
 		title: 'Medium',
 		difficulty: 'medium',
-		daily: true,
+		daily: false,
 	},
 	{
 		title: 'Hard',
 		difficulty: 'hard',
-		daily: true,
+		daily: false,
 	},
 	{
 		title: 'Chaos',
 		difficulty: 'chaos',
-		daily: true,
+		daily: false,
 	},
 	{
 		title: 'Recent Players',
 		difficulty: 'recentP',
-		daily: true,
+		daily: false,
 	},
 	{
 		title: 'Recent Starters',
 		difficulty: 'recentS',
-		daily: true,
+		daily: false,
 	},
 ];
 
@@ -59,7 +59,7 @@ export default async function GridSwitcher() {
 		<div style={{
 			padding: '10px',
 		}}>
-        <GridShared tables={tables} allPlayerData={allPlayerData} dailyId={dailyId} daily={true} />
+        <GridShared tables={tables} allPlayerData={allPlayerData} dailyId={dailyId} daily={false} />
 		</div>
     </>
 	);
