@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 export default function TopBar() {
     return (
         <div
@@ -18,7 +19,7 @@ export default function TopBar() {
         >
             <span>
                 NBA-Guess:
-                <a
+                <Link
                     href="/"
                     style={{
                         color: '#000000ff',
@@ -28,7 +29,7 @@ export default function TopBar() {
                     }}
                 >
                     Daily
-                </a>
+                </Link>
                 /
                 <a
                     href="/random"
