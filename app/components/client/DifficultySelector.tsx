@@ -147,13 +147,13 @@ function checkPlayerGuess(guess: string, playerFilename: string) {
         setIsChecking(true);
         
         try {
-          let result: any;
+          
           const currentPlayerFilename = playerData?.playerFilename;
           if (!currentPlayerFilename) {
             setFeedback('No player data available. Please try again later.');
             return;
           }
-          result = checkPlayerGuess(guess, currentPlayerFilename);
+          let result = checkPlayerGuess(guess, currentPlayerFilename);
           setFeedback(result.message);
           
           if (result.correct) {
