@@ -19,6 +19,7 @@ export default function Home() {
             <strong>Chaos:</strong> Played in 600 games<br />
             <strong>Recent Players:</strong> Played atleast 40 games last season<br />
             <strong>Recent Starters:</strong> Started atleast 40 games last season<br />
+            <strong>Extreme:</strong> Played in 100 games, only available on Random: Player<br />
         </p>
         </span>
      </div>

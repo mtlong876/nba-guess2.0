@@ -183,35 +183,6 @@ export async function getDailyInitials(difficulty: string) {
     const initials: string = parts.map((part: string) => part.charAt(0).toUpperCase()).join(' ');
     return initials;
 }
-export async function checkPlayerGuess(guess: string, playerFilename: string): Promise<{ correct: boolean; message: string , playerName?: string }> {
-  try {
-    // Extract player name from filename (remove .csv and ID)
-    const actualPlayerName = playerFilename
-      .replace('.csv', '')
-      .replace(/_\d+$/, '') // Remove ID at end
-      .replace(/_/g, ' '); // Replace underscores with spaces    
-    const normalizedGuess = guess.toLowerCase().trim();
-    const normalizedActual = actualPlayerName.toLowerCase().trim();
-    console.log(`Checking guess: ${normalizedGuess} against actual: ${normalizedActual}`);
-    if (normalizedGuess === normalizedActual) {
-      return {
-        correct: true,
-        message: `🎉 Correct! It was ${actualPlayerName}!`,
-        playerName: actualPlayerName // Return the actual player name for display
-      };
-    } else {
-      return {
-        correct: false,
-        message: `❌ Incorrect. Try again!`
-      };
-    }
-  } catch (error) {
-    return {
-      correct: false,
-      message: 'Error checking guess. Please try again.'
-    };
-  }
-}
 
 export async function checkDailyGuess(guess: string, difficulty: string) {
   try{
@@ -246,12 +217,12 @@ export async function checkDailyGuess(guess: string, difficulty: string) {
 
 export async function getPlayerData(difficulty: string, daily: boolean) {
   let player: string;
-  const dailyData = await getDailyData();
+  
   if (!daily) {
     const dataArray = loadFileToArray(difficulty);
     player = getRandomEntry(dataArray);
   } else {
-    //player = dailyFile[difficulty];
+    const dailyData = await getDailyData();
     player = dailyData[0][difficulty.toLowerCase()];
   }
 

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect} from 'react';
-import { checkPlayerGuess,checkDailyGuess,getDailyName,getDailyInitials} from '../../actions/playerActions';
+import { checkDailyGuess,getDailyName,getDailyInitials} from '../../actions/playerActions';
 
 type GridDisplayProps = {
   csvData: { [key: string]: string }[];
@@ -25,7 +25,36 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   const [playerName, setPlayerName] = useState("");
   const [playerInitials, setPlayerInitials] = useState("");
   const headers = csvData.length > 0 ? Object.keys(csvData[0]) : [];
-  
+
+  function checkPlayerGuess(guess: string, playerFilename: string) {
+  try {
+    // Extract player name from filename (remove .csv and ID)
+    const actualPlayerName = playerFilename
+      .replace('.csv', '')
+      .replace(/_\d+$/, '') // Remove ID at end
+      .replace(/_/g, ' '); // Replace underscores with spaces    
+    const normalizedGuess = guess.toLowerCase().trim();
+    const normalizedActual = actualPlayerName.toLowerCase().trim();
+    if (normalizedGuess === normalizedActual) {
+      return {
+        correct: true,
+        message: `🎉 Correct! It was ${actualPlayerName}!`,
+        playerName: actualPlayerName // Return the actual player name for display
+      };
+    } else {
+      return {
+        correct: false,
+        message: `❌ Incorrect. Try again!`
+      };
+    }
+  } catch (error) {
+    return {
+      correct: false,
+      message: 'Error checking guess. Please try again.'
+    };
+  }
+}
+
   function localInitials(difficulty:string) {
     if (daily){
       const cachedInitials = localStorage.getItem(`dailyInitials_${difficulty}`);

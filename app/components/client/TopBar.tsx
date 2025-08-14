@@ -18,7 +18,7 @@ export default function TopBar() {
             }}
         >
             <span>
-                NBA-Guess:
+                NBA-Guess: 
                 <Link
                     href="/"
                     style={{
@@ -30,7 +30,7 @@ export default function TopBar() {
                 >
                     Daily
                 </Link>
-                /
+                | Random:
                 <a
                     href="/random"
                     style={{
@@ -40,7 +40,18 @@ export default function TopBar() {
                         marginLeft: '16px',
                     }}
                 >
-                    Random
+                    Game /
+                </a>
+                <a
+                    href="/player"
+                    style={{
+                        color: '#000000ff',
+                        textDecoration: 'none',
+                        fontWeight: 'bold',
+                        marginLeft: '16px',
+                    }}
+                >
+                    Player
                 </a>
             </span>
             <button
