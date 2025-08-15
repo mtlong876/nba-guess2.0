@@ -33,9 +33,16 @@ export default function DifficultySelector() {
     };
 
   const getData = async () => {
-    const data = await getPlayerData(selectedDifficulty, false);
-    const flippedData = { ...data, csvData: [...data.csvData].reverse() };
-    setPlayerData(flippedData);
+    const res = await fetch(`/api/playerData?difficulty=${selectedDifficulty}&daily=false`,
+    {
+      headers: {
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`, // Replace with your actual token
+        // Add other headers if needed
+      },
+    }
+  );
+    const data = await res.json();
+    setPlayerData({ ...data, csvData: [...data.csvData].reverse() });
     setPlayerName(data.playerFilename.split('_').slice(0, -1).join(' '));
     setCurrentGuessesLeft(3); // Reset guesses for new difficulty
     setGuess('');
