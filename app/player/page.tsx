@@ -1,11 +1,12 @@
 import TopBar from '../components/client/TopBar';
 import DifficultySelector from '../components/client/DifficultySelector';
-
-export default function Home() {
+import {getAllPlayerNames} from '../actions/playerActions';
+export default async function Home() {
+  const allPlayerNames = await getAllPlayerNames();
   return (
     <>
       <TopBar />
-      <DifficultySelector />
+      <DifficultySelector allPlayerNames = {allPlayerNames || []}/>
     </>
   );
 }

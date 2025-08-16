@@ -12,7 +12,7 @@ const difficulties = [
   { value: 'recentS', label: 'Recent Starters' },
 ];
 
-export default function DifficultySelector() {
+export default function DifficultySelector({ allPlayerNames }: { allPlayerNames: string[] }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [currentGuessesLeft, setCurrentGuessesLeft] = useState(3);
   const [guess, setGuess] = useState("");
@@ -23,24 +23,21 @@ export default function DifficultySelector() {
   const [isChecking, setIsChecking] = useState(false);
   const [correctGuess , setCorrectGuess] = useState(false);
   const [status, setStatus] = useState<"incomplete" | "completed" | "failed">("incomplete");
-  const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
+
 
 
   const headers = playerData?.csvData && playerData.csvData.length > 0 ? Object.keys(playerData.csvData[0]) : [];
-  const loadPlayerNames = async () => {
-        const names = await getAllPlayerNames();
-        setAllPlayerNames(names);
-    };
+
 
   const getData = async () => {
     const res = await fetch(`/api/playerData?difficulty=${selectedDifficulty}&daily=false`,
-    {
-      headers: {
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`, // Replace with your actual token
-        // Add other headers if needed
-      },
-    }
-  );
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`, // Replace with your actual token
+          // Add other headers if needed
+        },
+      }
+    );
     const data = await res.json();
     setPlayerData({ ...data, csvData: [...data.csvData].reverse() });
     setPlayerName(data.playerFilename.split('_').slice(0, -1).join(' '));
@@ -69,10 +66,6 @@ export default function DifficultySelector() {
         return initials;
         }
   }
-
-  useEffect(() => {
-    loadPlayerNames();
-  }, []);
 
   useEffect(() => {
     getData();
