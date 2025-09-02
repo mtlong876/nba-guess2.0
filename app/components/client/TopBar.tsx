@@ -28,7 +28,7 @@ export default function TopBar() {
                         marginRight: '16px',
                     }}
                 >
-                    Daily
+                    ‎ Daily
                 </Link>
                 | Random:
                 <a
@@ -40,7 +40,7 @@ export default function TopBar() {
                         marginLeft: '16px',
                     }}
                 >
-                    Game /
+                Game /
                 </a>
                 <a
                     href="/player"
@@ -52,6 +52,18 @@ export default function TopBar() {
                     }}
                 >
                     Player
+                </a>
+                ‎ | Create:
+                <a
+                    href="/create"
+                    style={{
+                        color: '#000000ff',
+                        textDecoration: 'none',
+                        fontWeight: 'bold',
+                        marginLeft: '16px',
+                    }}
+                >
+                    Game
                 </a>
             </span>
             <button

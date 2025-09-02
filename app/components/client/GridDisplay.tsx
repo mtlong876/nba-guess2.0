@@ -104,7 +104,7 @@ export default function GridDisplay({ csvData, difficulty ,daily,playerFilename,
   
 
   useEffect(() => {
-    console.log("difficulty changed:", difficulty);
+    //console.log("difficulty changed:", difficulty);
     let savedStatus: string | null;
     let savedGuesses: string | null;
     if(daily){

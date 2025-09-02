@@ -51,7 +51,6 @@ export default async function GridSwitcher() {
 			return { csvData: [...csvData].reverse(), playerFilename };
 		})
 	);
-	//console.log('All player data loaded:', allPlayerData);
 	//revalidateTag('players')
 	return (
 		<>

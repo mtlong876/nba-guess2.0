@@ -37,7 +37,7 @@ const getDailyData = unstable_cache(async () => {
     }
     const sql = neon(databaseUrl);
     const data = await sql`SELECT * FROM daily ORDER BY time_stamp DESC LIMIT 1;`;
-    console.log('Data loaded from database:', data);
+    //console.log('Data loaded from database:', data);
     return data;
 }, ['dailyData'],{
   tags: ['dailyData']
@@ -195,7 +195,7 @@ export async function checkDailyGuess(guess: string, difficulty: string) {
         .replace(/_/g, ' '); // Replace underscores with spaces    
       const normalizedGuess = guess.toLowerCase().trim();
       const normalizedActual = actualPlayerName.toLowerCase().trim();
-      console.log(`Checking guess: ${normalizedGuess} against actual: ${normalizedActual}`);
+      //console.log(`Checking guess: ${normalizedGuess} against actual: ${normalizedActual}`);
       if (normalizedGuess === normalizedActual) {
         return {
           correct: true,
@@ -230,7 +230,7 @@ export async function getPlayerData(difficulty: string, daily: boolean) {
   if (daily) {
     player = "NOCHEATING"
   }
-  console.log(`Loaded data for player: ${player}`);
+  //console.log(`Loaded data for player: ${player}`);
   // Return both the data and the player filename for guess checking
   return {
     csvData,
@@ -261,4 +261,40 @@ export async function getAllPlayerNames(): Promise<string[]> {
     console.error('Error reading player names:', error);
     return [];
   }
+}
+
+export async function getAllPlayerNamesPicker(): Promise<{ filename: string; name: string }[]> {
+  try {
+    const filepath = path.join(process.cwd(), './app/difficulties/', 'extreme.txt');
+    const fileContent = fs.readFileSync(filepath, 'utf-8');
+    
+    return fileContent
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(filename => {
+        const name = filename
+          .replace('.csv', '')
+          .replace(/_\d+$/, '') // Remove ID at end
+          .replace(/_/g, ' ') // Replace underscores with spaces
+          .trim();
+        
+        return {
+          filename: filename,
+          name: name
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
+  } catch (error) {
+    console.error('Error reading player names:', error);
+    return [];
+  }
+}
+
+export async function getCSVFromFilename(filename: string): Promise<{ csvData: { [key: string]: string }[]; playerFilename: string }> {
+    const csvData = loadCSVToObject(filename);
+    return {
+        csvData,
+        playerFilename: filename
+    };
 }

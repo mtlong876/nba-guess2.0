@@ -24,6 +24,7 @@ export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSh
     const didMount = useRef(false);
     const [allCompleteOrFailed, setAllCompleteOrFailed] = useState(false);
     const [allPlayerNames, setAllPlayerNames] = useState<string[]>([]);
+    const [newPlayerIds, setNewPlayerIds] = useState<string[]>([]);
     const [status, setStatus] = useState<Record<Difficulty, Status>>({
         easy: "incomplete",
         medium: "incomplete",
@@ -115,9 +116,14 @@ export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSh
         const allComplete = Object.values(status).every(
             (s) => s === "completed" || s === "failed"
         );
-        console.log('All complete or failed:', allComplete);
+        //console.log('All complete or failed:', allComplete);
         setAllCompleteOrFailed(allComplete);
         if (allComplete) {
+            const playerIds = allPlayerData.map(data => {
+                const match = data.playerFilename.match(/_(\d+)\.csv$/);
+                return match ? match[1] : '';
+            }).filter(id => id !== '');
+            setNewPlayerIds(playerIds);
             setShowPopup(true);
         }
     }, [status]);
@@ -135,7 +141,7 @@ export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSh
             if (guessed[diff] === 2) return "🥈"; // silver
             if (guessed[diff] === 1) return "🥉"; // bronze
             return "❌"; // red cross
-        }).join("") + " https://NBA-Guess.com";
+        }).join("") + " https://NBA-Guess.com/createdGame?players=" + newPlayerIds.join(",");
     }
 
     useEffect(() => {
@@ -157,7 +163,7 @@ export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSh
             difficulties.forEach((diff) => {
                 const stored = localStorage.getItem(`status_${diff}`);
                 if (stored === "completed" || stored === "failed" || stored === "incomplete") {
-                    console.log(`Loaded status for ${diff}:`, stored);
+                    //console.log(`Loaded status for ${diff}:`, stored);
                     if (loadedStatus[diff] !== stored) {
                         loadedStatus[diff] = stored;
                         changed = true;
@@ -279,9 +285,9 @@ export default function GridShared({tables, allPlayerData,dailyId,daily}: GridSh
                             {allCompleteOrFailed ? "All Grids Completed!" : "Grids In Progress"}
                         </h2>
                         <div style = {{marginTop: 10}}>
-                            {shareString.replace('https://NBA-Guess.com', '')}
-                            <a href="https://NBA-Guess.com" target="_blank" rel="noopener noreferrer">
-                                NBA-Guess.com
+                            {shareString.replace(daily ? 'https://NBA-Guess.com' : 'https://NBA-Guess.com/createdGame?players=' + newPlayerIds.join(","), '')}
+                            <a href={daily ? "https://NBA-Guess.com" : "https://NBA-Guess.com/createdGame?players=" + newPlayerIds.join(",")} target="_blank" rel="noopener noreferrer">
+                                {daily ? "NBA-Guess.com" : "NBA-Guess.com/createdGame?players=" + newPlayerIds.join(",")}
                             </a>
                         </div>
                         <button
