@@ -4,7 +4,7 @@ import { getAllPlayerNamesPicker } from "../actions/playerActions";
 import GridSwitcher from "./components/server/GridSwitcherCreated";
 import { Suspense } from 'react';
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 
