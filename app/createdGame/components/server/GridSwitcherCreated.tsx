@@ -45,7 +45,13 @@ export default async function GridSwitcher(gridswitcherProps: gridswitcherProps)
     // Pre-fetch all player data on the server
     const dailyId = await getDailyId();
     const playerDataPromises = Array.from(gridswitcherProps.playerIds.values()).map(filename => getCSVFromFilename(filename));
-    const allPlayerData = await Promise.all(playerDataPromises);
+    const allPlayerDataRaw = await Promise.all(playerDataPromises);
+    
+    // Flip the CSV data for each player
+    const allPlayerData = allPlayerDataRaw.map(playerData => ({
+        ...playerData,
+        csvData: [...playerData.csvData].reverse()
+    }));
     
     //revalidateTag('players')
     return (
