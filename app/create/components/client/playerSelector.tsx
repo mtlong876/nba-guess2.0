@@ -46,8 +46,8 @@ export default function PlayerSelector({ allPlayerNames }: PlayerSelectorProps) 
       return;
     }
 
-    if (selectedPlayers.length === 0) {
-      alert('Please select at least one player.');
+    if (selectedPlayers.length !== 6) {
+      alert('Please select at six players.');
       return;
     }
 
@@ -55,16 +55,13 @@ export default function PlayerSelector({ allPlayerNames }: PlayerSelectorProps) 
       const match = filename.match(/_(\d+)\.csv$/);
       return match ? match[1] : '';
     });
-
+    if (playerIds.length !== 6 || playerIds.includes('')) {
+      alert('Error: Could not extract player IDs from filenames.');
+        return;
+    }
     const url = `https://nba-guess.com/createdGame?players=${playerIds.join(',')}`;
     setGeneratedUrl(url);
 
-    console.table(selectedPlayers.map((player, index) => ({ 
-      Position: index + 1, 
-      PlayerName: player,
-      Filename: selectedFiles[index] || 'Not found',
-      PlayerID: playerIds[index] || 'Not found'
-    })));
   };
 
   return (
