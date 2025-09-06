@@ -13,13 +13,13 @@ export default function Home() {
         </p>
         <h2>Difficulty definitions</h2>
         <p>
-            <strong>Easy:</strong> Played in 600 games while being drafted after 2005<br />
-            <strong>Medium:</strong> Played in 600 games while being drafted after 1990<br />
-            <strong>Hard:</strong> Played in 600 games while being drafted after 1980<br />
+            <strong>Easy:</strong> Started in 500 games while being drafted after 2005<br />
+            <strong>Medium:</strong> Started in 500 games while being drafted after 1990<br />
+            <strong>Hard:</strong> Started in 500 games while being drafted after 1975<br />
             <strong>Chaos:</strong> Played in 600 games<br />
             <strong>Recent Players:</strong> Played atleast 40 games last season<br />
             <strong>Recent Starters:</strong> Started atleast 40 games last season<br />
-            <strong>Extreme:</strong> Played in 100 games, only available on Random: Player<br />
+            <strong>Extreme:</strong> Played in 100 games, only available on Random: Player or in created games<br />
         </p>
         </span>
      </div>
